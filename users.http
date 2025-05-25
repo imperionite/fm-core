@@ -1,0 +1,85 @@
+### VARS
+@access=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0ODIyOTg2NiwiaWF0IjoxNzQ4MTQzNDY2LCJqdGkiOiJhYTRmYjcwNDZhZGY0OTIyOGU3NDhlMDRjZGUxNWMxYSIsInVzZXJfaWQiOjl9.cDm3nNlR8ppuWu4hqAzXjLqCTJDiG6LTUWDgP7mAY7txiHzMjxaS5-498fOnB72nNEO9YySgK9BQcFsnIDJTZQ
+@refresh=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0ODE2MDU0NSwiaWF0IjoxNzQ4MDc0MTQ1LCJqdGkiOiJiNjE4NTRlZGRiMGE0Y2VlYWNhM2EwOGQ1YmU2N2MwMSIsInVzZXJfaWQiOjEzfQ.pUry6PK37v88oQMaTqGagtS9t5Oa9oinkEzydRsAz2v2ErA5etZk4zO0zlus8mkPkUFO35nloSyueVdQjUdZpg
+@username=user1
+### Register new user dj-rest-auth
+# fm@grr.la
+POST http://127.0.0.1:8000/api/users/auth/registration/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "user11",
+    "email": "fm@grr.la",
+    "password1": "passworD!123",
+    "password2": "passworD!123"
+    
+}
+
+### Register new user Djoser
+# fm@grr.la
+POST http://127.0.0.1:8000/auth/users/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "user11",
+    "email": "fm@grr.la",
+    "password": "passworD!123"
+    
+}
+
+### Login - can login with username or email Djoser
+POST http://localhost:8000/api/users/djoser-auth/jwt/create/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "user7",
+    "password": "passworD!123"
+    
+}
+
+### Login - can login with username or email dj-rest-auth
+POST http://localhost:8000/api/users/auth/login/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "user2@grr.la",
+    "password": "passworD!123"
+    
+}
+
+### Check authenticated user
+GET http://127.0.0.1:8000/api/users/auth/user/ HTTP/1.1
+Authorization: Bearer {{access}}
+
+
+### Resend email verification for unverified email
+POST http://localhost:8000/api/users/auth/registration/resend-email/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "fm@grr.la"
+}
+
+### Logout with dj-rest-auth
+POST http://localhost:8000/api/users/auth/logout/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{access}}
+
+{
+
+    "refresh": "{{refresh}}"
+}
+
+### obtaining new access token via refresh token with Djoser - Public
+POST http://localhost:8000/api/users/djoser-auth/jwt/refresh/ HTTP/1.1
+Content-Type: application/json
+
+{
+   "refresh": "{{refresh}}"
+}
+
+
+### Deactivate user
+DELETE  http://localhost:8000/api/users/deactivate/{{username}}/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{access}}
