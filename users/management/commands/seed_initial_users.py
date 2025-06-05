@@ -34,7 +34,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('Users already exist. Aborting.'))
             return
 
-        # Create superuser with verified email
+        # Create superuser with unverified email
         super_user = self.create_user_with_email(
             username=config('SU_USERNAME'),
             email=config('SU_EMAIL'),
@@ -44,7 +44,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(self.style.SUCCESS('Superuser created and email verified.'))
 
-        # Create staff user (not superuser) with verified email
+        # Create staff user (not superuser) with unverified email
         staff_user = self.create_user_with_email(
             username=config('STAFF_USERNAME'),
             email=config('STAFF_EMAIL'),
@@ -54,7 +54,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(self.style.SUCCESS('Staff user created and email verified.'))
 
-        # Create 10 regular non-staff users with verified emails
+        # Create 10 regular non-staff users with unverified emails
         common_password = 'passworD!123'
         for i in range(1, 11):
             self.create_user_with_email(

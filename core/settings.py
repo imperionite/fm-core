@@ -50,6 +50,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'users.apps.UsersConfig',
+    'orders.apps.OrdersConfig',
 ]
 
 
@@ -408,6 +409,9 @@ EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 SERVER_EMAIL = config('SERVER_EMAIL')
 
+# Express
+# ------------------------------------------------------------------------------
+EXPRESS_SERVICE_URL = config('EXPRESS_SERVICE_URL')
 
 # Security
 # ------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 ### VARS
-@access=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0ODIyOTg2NiwiaWF0IjoxNzQ4MTQzNDY2LCJqdGkiOiJhYTRmYjcwNDZhZGY0OTIyOGU3NDhlMDRjZGUxNWMxYSIsInVzZXJfaWQiOjl9.cDm3nNlR8ppuWu4hqAzXjLqCTJDiG6LTUWDgP7mAY7txiHzMjxaS5-498fOnB72nNEO9YySgK9BQcFsnIDJTZQ
+@access=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ4OTM4NDM2LCJpYXQiOjE3NDg5MzQ4MzYsImp0aSI6IjFhNDVlOTRlZDE2NDQ5ZTQ5ODU2YWU1NmRhOTZjNmQxIiwidXNlcl9pZCI6NH0.TVOHupHp6p2-XMVlVGlC_WobPMyMBChRgUjMZB1wNHjELq1p3EOrHKgWXwzkKmRVxLqFvXVPgIhCRLSTZh3s3A
 @refresh=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0ODE2MDU0NSwiaWF0IjoxNzQ4MDc0MTQ1LCJqdGkiOiJiNjE4NTRlZGRiMGE0Y2VlYWNhM2EwOGQ1YmU2N2MwMSIsInVzZXJfaWQiOjEzfQ.pUry6PK37v88oQMaTqGagtS9t5Oa9oinkEzydRsAz2v2ErA5etZk4zO0zlus8mkPkUFO35nloSyueVdQjUdZpg
 @username=user1
 ### Register new user dj-rest-auth
@@ -47,7 +47,7 @@ Content-Type: application/json
     
 }
 
-### Check authenticated user
+### Check the authenticated user
 GET http://127.0.0.1:8000/api/users/auth/user/ HTTP/1.1
 Authorization: Bearer {{access}}
 

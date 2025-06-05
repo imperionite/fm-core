@@ -16,3 +16,18 @@ class IsOwnerOrAdmin(permissions.BasePermission):
             return True
 
         return obj == request.user
+    
+
+class IsEmailVerified(permissions.BasePermission):
+    """
+    Allows access only to authenticated users with verified email.
+    """
+    message = "You must verify your email to perform this action."
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user and
+            request.user.is_authenticated and
+            getattr(request.user, "emailaddress_set", None) and
+            request.user.emailaddress_set.filter(primary=True, verified=True).exists()
+        )
