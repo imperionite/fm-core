@@ -27,5 +27,11 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'user', 'ordered_at', 'status', 'items']
+        fields = ['id', 'user', 'ordered_at', 'status', 'items', 'total_price']
         read_only_fields = ['user', 'ordered_at']
+
+
+class OrderStatusUpdateSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=["pending", "confirmed", "completed", "cancelled"])
+
+

@@ -145,7 +145,7 @@ DATABASES = {
 DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 
 # Caching
-REDIS_URL = config('REDIS_URL', default='redis://127.0.0.1:7379/1') # default on dev mode using docker
+REDIS_URL = config('REDIS_URL')
 
 CACHES = {
     'default': {
@@ -291,9 +291,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
 
     'PAGE_SIZE': 10,
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 
+    # Rate limit (Throttling)
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',   # For anonymous users
+        'rest_framework.throttling.UserRateThrottle',   # For authenticated users
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/min',    # rate limit for anonymous users (login is anon) can be adjusted
+        'user': '1000/day', # Authenticated users can have higher limits
+    }
 }
+
+
 
 # Simple JWT
 # ------------------------------------------------------------------------------

@@ -5,9 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.throttling import AnonRateThrottle
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
+from dj_rest_auth.views import LoginView
+
+
 from decouple import config
 
 from .serializers import CustomUserDetailsSerializer
@@ -47,3 +51,9 @@ class UserDeactivateView(generics.DestroyAPIView):
         # Instead of deleting, deactivate
         instance.is_active = False
         instance.save()
+
+class LoginThrottleView(LoginView):
+    throttle_classes = [AnonRateThrottle]
+
+class GoogleLoginThrottleView(GoogleLogin):
+    throttle_classes = [AnonRateThrottle] 
