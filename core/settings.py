@@ -424,6 +424,12 @@ SERVER_EMAIL = config('SERVER_EMAIL')
 # ------------------------------------------------------------------------------
 EXPRESS_SERVICE_URL = config('EXPRESS_SERVICE_URL')
 
+# Stripe (Sandbox)
+# ------------------------------------------------------------------------------
+STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+# STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET")
+
 # Security
 # ------------------------------------------------------------------------------
 SESSION_COOKIE_HTTPONLY = False

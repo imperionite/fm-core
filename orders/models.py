@@ -26,6 +26,7 @@ class Order(models.Model):
     status = models.CharField(max_length=50, choices=[
         ("pending", "Pending"),
         ("confirmed", "Confirmed"),
+        ("paid", "Paid"),
         ("completed", "Completed"),
         ("cancelled", "Cancelled"),
     ], default="pending")
@@ -40,3 +41,21 @@ class OrderItem(models.Model):
     service_id = models.CharField(max_length=255)
     service_name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+
+
+class Payment(models.Model):
+    PAYMENT_METHODS = [
+        ("maya", "Maya"),
+        ("card", "Card"),
+        ("paypal", "PayPal"),
+    ]
+
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
+    method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
+    paid_at = models.DateTimeField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    reference_id = models.CharField(max_length=100, blank=True, null=True)  # For external provider reference
+
+    def __str__(self):
+        return f"{self.method.upper()} payment for Order #{self.order.id}"
+

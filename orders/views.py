@@ -9,39 +9,40 @@ from rest_framework.decorators import action
 from django.db import transaction
 import requests
 
-from .models import Cart, CartItem, Order, OrderItem
-from .serializers import CartSerializer, CartItemSerializer, OrderSerializer, OrderStatusUpdateSerializer
-from users.permissions import IsOwnerOrAdmin, IsEmailVerified
+from .models import Cart, CartItem, Order, OrderItem, Payment
+from .serializers import CartSerializer, CartItemSerializer, OrderSerializer, OrderStatusUpdateSerializer, PaymentSerializer
+from utils.cache_keys import cart_key, orders_list_key, order_detail_key, service_key
 
 EXPRESS_SERVICE_URL = settings.EXPRESS_SERVICE_URL
 
 def fetch_service(service_id):
-    cache_key = f"service_{service_id}"
-    cached_service = cache.get(cache_key)
-    if cached_service:
-        return cached_service
+    key = service_key(service_id)
+    cached = cache.get(key)
+    if cached:
+        return cached
 
     response = requests.get(f"{EXPRESS_SERVICE_URL}/{service_id}")
     if response.status_code == 200:
-        service_data = response.json()
-        cache.set(cache_key, service_data, timeout=3600)  # Cache for 1 hour
-        return service_data
+        data = response.json()
+        cache.set(key, data, timeout=3600)  # Cache for 1 hour
+        return data
+
     raise ValidationError(f"Service with ID {service_id} not found.")
 
 
 class CartView(APIView):
-    permission_classes = [IsAuthenticated, IsEmailVerified]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        cache_key = f"cart_user_{request.user.id}"
-        cached_cart = cache.get(cache_key)
-        if cached_cart:
-            return Response(cached_cart)
+        key = cart_key(request.user.id)
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
 
         cart, _ = Cart.objects.get_or_create(user=request.user)
-        serializer = CartSerializer(cart)
-        cache.set(cache_key, serializer.data, timeout=300)  # Cache for 5 minutes
-        return Response(serializer.data)
+        serialized = CartSerializer(cart).data
+        cache.set(key, serialized, timeout=300)
+        return Response(serialized)
 
     def post(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -50,7 +51,6 @@ class CartView(APIView):
         if not service_id:
             return Response({"detail": "Missing service_id"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Prevent duplicates
         if cart.items.filter(service_id=service_id).exists():
             return Response({"detail": "Service already in cart."}, status=status.HTTP_409_CONFLICT)
 
@@ -61,16 +61,14 @@ class CartView(APIView):
             service_name=service.get("name"),
             price=service.get("price"),
         )
-        cache_key = f"cart_user_{request.user.id}"
-        cache.delete(cache_key)
+        cache.delete(cart_key(request.user.id))
         return Response(CartItemSerializer(item).data, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
         cart = Cart.objects.filter(user=request.user).first()
         if cart:
             cart.items.all().delete()
-            cache_key = f"cart_user_{request.user.id}"
-            cache.delete(cache_key)
+            cache.delete(cart_key(request.user.id))
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -88,79 +86,109 @@ class CartItemDeleteView(APIView):
             return Response({"detail": "Item not in cart."}, status=status.HTTP_404_NOT_FOUND)
 
         item.delete()
+        cache.delete(cart_key(request.user.id))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated, IsEmailVerified]
+    permission_classes = [IsAuthenticated]
     pagination_class = None
 
     def get_queryset(self):
         user = self.request.user
-        # Staff sees all orders; regular users see only their own
         base_qs = Order.objects.all() if user.is_staff else Order.objects.filter(user=user)
         return base_qs.order_by('-ordered_at')
-    
+
     def list(self, request, *args, **kwargs):
         user = request.user
-        cache_key = f"orders_list_user_{user.id}"
-        cached_orders = cache.get(cache_key)
-        if cached_orders:
-            return Response(cached_orders)
+        key = orders_list_key(user.id)
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
 
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        cache.set(cache_key, serializer.data, timeout=300)
-        return Response(serializer.data)
-    
+        serialized = self.get_serializer(queryset, many=True).data
+        cache.set(key, serialized, timeout=300)
+        return Response(serialized)
+
     def retrieve(self, request, *args, **kwargs):
-        order_id = kwargs.get('pk')
-        cache_key = f"order_{order_id}"
-        cached_order = cache.get(cache_key)
-        if cached_order:
-            return Response(cached_order)
+        order_id = kwargs.get("pk")
+        key = order_detail_key(order_id)
+        cached = cache.get(key)
+        if cached:
+            return Response(cached)
 
         order = self.get_object()
-        serializer = self.get_serializer(order)
-        cache.set(cache_key, serializer.data, timeout=300)
-        return Response(serializer.data)
+        serialized = self.get_serializer(order).data
+        cache.set(key, serialized, timeout=300)
+        return Response(serialized)
 
-    # Users can only update their own order from confirmed → completed; Admin can update any status
-    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["patch"], permission_classes=[IsAuthenticated])
     def update_status(self, request, pk=None):
         order = self.get_object()
-
-        # Admins can do anything
-        if request.user.is_staff:
-            pass
-        # Regular user can only mark their own orders as completed
-        elif order.user != request.user:
-            return Response(
-                {"detail": "You do not have permission to update this order."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        elif request.data.get("status") != "completed" or order.status != "confirmed":
-            return Response(
-                {"detail": "You can only mark your confirmed order as completed."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        requested_status = request.data.get("status")
 
         serializer = OrderStatusUpdateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        order.status = serializer.validated_data['status']
+        # Staff can update status more freely
+        if request.user.is_staff:
+            # Staff specific logic for cancellation
+            if requested_status == "cancelled":
+                # Staff can cancel any order that is not already completed or refunded
+                if order.status in ["completed", "refunded"]:
+                    return Response(
+                        {"detail": f"Order status '{order.status}' cannot be changed to 'cancelled' by staff."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            # Staff specific logic for completion (e.g. they can mark paid as completed directly)
+            elif requested_status == "completed" and order.status != "paid":
+                # If staff wants to complete an order, it generally needs to be paid first.
+                # Adjust this rule if staff can complete orders without prior payment.
+                return Response(
+                    {"detail": "Staff can only mark paid orders as completed (or complete other statuses with a more specific transition rule)."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            
+        # Regular user specific status update rules
+        elif order.user == request.user: # User owns this order
+            if requested_status == "completed":
+                if order.status != "paid":
+                    return Response(
+                        {"detail": "You can only mark your paid order as completed."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            elif requested_status == "cancelled":
+                # Users can only cancel orders that are 'pending' or 'confirmed'
+                if order.status not in ["pending", "confirmed"]:
+                    return Response(
+                        {"detail": f"You can only cancel orders with 'pending' or 'confirmed' status. Current status: '{order.status}'."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            else: # User attempting to change to any other status not explicitly allowed
+                 return Response(
+                    {"detail": f"You do not have permission to change order status to '{requested_status}'."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        else: # User does not own the order and is not staff
+            return Response(
+                {"detail": "You do not have permission to update this order."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        order.status = requested_status # Use the validated requested_status
         order.save()
-        # Invalidate cache for this order after update
-        cache_key = f"order_{pk}"
-        cache.delete(cache_key)
-        # Also invalidate orders list cache for user
-        cache.delete(f"orders_list_user_{request.user.id}")
+
+        # Invalidate caches
+        cache.delete(order_detail_key(pk))
+        cache.delete(orders_list_key(request.user.id))
+
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
 
-    # Update your checkout() to auto-set status to "confirmed" after creation
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def checkout(self, request):
         cart = Cart.objects.filter(user=request.user).first()
@@ -171,10 +199,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
 
         with transaction.atomic():
-            # Create order with status='confirmed'
             order = Order.objects.create(user=request.user, status="confirmed")
 
-            # Add OrderItems
             order_items = [
                 OrderItem(
                     order=order,
@@ -186,16 +212,41 @@ class OrderViewSet(viewsets.ModelViewSet):
             ]
             OrderItem.objects.bulk_create(order_items)
 
-            # Calculate total price
             order.total_price = sum(item.price for item in order_items)
             order.save()
 
-            # Clear cart
             cart.items.all().delete()
+            cache.delete(cart_key(request.user.id))
 
         serializer = OrderSerializer(order)
-        # Invalidate orders list cache for user after checkout
-        cache.delete(f"orders_list_user_{request.user.id}")
+        cache.delete(orders_list_key(request.user.id))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
 
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def pay(self, request, pk=None):
+        order = self.get_object()
 
+        if order.user != request.user and not request.user.is_staff:
+            return Response({"detail": "You do not own this order."}, status=status.HTTP_403_FORBIDDEN)
+
+        if order.status != "confirmed":
+            return Response({"detail": "Only confirmed orders can be paid."}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = PaymentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        Payment.objects.create(
+            order=order,
+            method=serializer.validated_data['method'],
+            amount=order.total_price,
+            reference_id=serializer.validated_data.get('reference_id'),
+        )
+
+        order.status = "paid"
+        order.save()
+
+        cache.delete(order_detail_key(pk))
+        cache.delete(orders_list_key(order.user.id))
+
+        return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)

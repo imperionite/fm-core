@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Cart, CartItem, Order, OrderItem
+from .models import Cart, CartItem, Order, OrderItem, Payment
 
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,6 +32,14 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderStatusUpdateSerializer(serializers.Serializer):
-    status = serializers.ChoiceField(choices=["pending", "confirmed", "completed", "cancelled"])
+    status = serializers.ChoiceField(choices=["pending", "confirmed", "paid", "completed", "cancelled"])
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['method', 'amount', 'reference_id', 'paid_at']
+        read_only_fields = ['paid_at', 'amount']
+
 
 
