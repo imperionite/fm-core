@@ -12,6 +12,7 @@ import requests
 from .models import Cart, CartItem, Order, OrderItem, Payment
 from .serializers import CartSerializer, CartItemSerializer, OrderSerializer, OrderStatusUpdateSerializer, PaymentSerializer
 from utils.cache_keys import cart_key, orders_list_key, order_detail_key, service_key
+from .tasks import send_order_confirmation_email
 
 EXPRESS_SERVICE_URL = settings.EXPRESS_SERVICE_URL
 
@@ -98,12 +99,12 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        base_qs = Order.objects.all() if user.is_staff else Order.objects.filter(user=user)
-        return base_qs.order_by('-ordered_at')
+        if user.is_staff:
+            return Order.objects.all().order_by('-ordered_at')
+        return Order.objects.filter(user=user).order_by('-ordered_at')
 
     def list(self, request, *args, **kwargs):
-        user = request.user
-        key = orders_list_key(user.id)
+        key = orders_list_key(request.user.id)
         cached = cache.get(key)
         if cached:
             return Response(cached)
@@ -134,73 +135,54 @@ class OrderViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Staff can update status more freely
         if request.user.is_staff:
-            # Staff specific logic for cancellation
-            if requested_status == "cancelled":
-                # Staff can cancel any order that is not already completed or refunded
-                if order.status in ["completed", "refunded"]:
-                    return Response(
-                        {"detail": f"Order status '{order.status}' cannot be changed to 'cancelled' by staff."},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-            # Staff specific logic for completion (e.g. they can mark paid as completed directly)
-            elif requested_status == "completed" and order.status != "paid":
-                # If staff wants to complete an order, it generally needs to be paid first.
-                # Adjust this rule if staff can complete orders without prior payment.
+            if requested_status == "cancelled" and order.status in ["completed", "refunded"]:
                 return Response(
-                    {"detail": "Staff can only mark paid orders as completed (or complete other statuses with a more specific transition rule)."},
+                    {"detail": f"Cannot cancel order in '{order.status}' status."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            
-        # Regular user specific status update rules
-        elif order.user == request.user: # User owns this order
-            if requested_status == "completed":
-                if order.status != "paid":
-                    return Response(
-                        {"detail": "You can only mark your paid order as completed."},
-                        status=status.HTTP_403_FORBIDDEN
-                    )
-            elif requested_status == "cancelled":
-                # Users can only cancel orders that are 'pending' or 'confirmed'
-                if order.status not in ["pending", "confirmed"]:
-                    return Response(
-                        {"detail": f"You can only cancel orders with 'pending' or 'confirmed' status. Current status: '{order.status}'."},
-                        status=status.HTTP_403_FORBIDDEN
-                    )
-            else: # User attempting to change to any other status not explicitly allowed
-                 return Response(
-                    {"detail": f"You do not have permission to change order status to '{requested_status}'."},
+            elif requested_status == "completed" and order.status != "paid":
+                return Response(
+                    {"detail": "Can only mark paid orders as completed."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        elif order.user == request.user:
+            if requested_status == "completed" and order.status != "paid":
+                return Response(
+                    {"detail": "Only paid orders can be marked as completed."},
                     status=status.HTTP_403_FORBIDDEN
                 )
-        else: # User does not own the order and is not staff
+            elif requested_status == "cancelled" and order.status not in ["pending", "confirmed"]:
+                return Response(
+                    {"detail": f"Cannot cancel order in '{order.status}' status."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            elif requested_status not in ["completed", "cancelled"]:
+                return Response(
+                    {"detail": f"Cannot change order to '{requested_status}'."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        else:
             return Response(
                 {"detail": "You do not have permission to update this order."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        order.status = requested_status # Use the validated requested_status
+        order.status = requested_status
         order.save()
-
-        # Invalidate caches
         cache.delete(order_detail_key(pk))
         cache.delete(orders_list_key(request.user.id))
-
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def checkout(self, request):
         cart = Cart.objects.filter(user=request.user).first()
         if not cart or not cart.items.exists():
-            return Response(
-                {"detail": "Cart is empty."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": "Cart is empty."}, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
             order = Order.objects.create(user=request.user, status="confirmed")
-
             order_items = [
                 OrderItem(
                     order=order,
@@ -211,17 +193,14 @@ class OrderViewSet(viewsets.ModelViewSet):
                 for item in cart.items.all()
             ]
             OrderItem.objects.bulk_create(order_items)
-
             order.total_price = sum(item.price for item in order_items)
             order.save()
-
             cart.items.all().delete()
             cache.delete(cart_key(request.user.id))
 
         serializer = OrderSerializer(order)
         cache.delete(orders_list_key(request.user.id))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def pay(self, request, pk=None):
@@ -238,9 +217,9 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         Payment.objects.create(
             order=order,
-            method=serializer.validated_data['method'],
+            method=serializer.validated_data["method"],
             amount=order.total_price,
-            reference_id=serializer.validated_data.get('reference_id'),
+            reference_id=serializer.validated_data.get("reference_id"),
         )
 
         order.status = "paid"
@@ -248,5 +227,20 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         cache.delete(order_detail_key(pk))
         cache.delete(orders_list_key(order.user.id))
+
+        order_data = {
+            "items": [
+                {
+                    "name": item.service_name,
+                    "quantity": 1,
+                    "price": item.price,
+                }
+                for item in order.items.all()
+            ],
+            "total": order.total_price,
+        }
+
+        # Trigger email confirmation via Celery
+        send_order_confirmation_email.delay(order.user.email, order_data)
 
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)

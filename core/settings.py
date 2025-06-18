@@ -46,6 +46,9 @@ THIRD_PARTY_APPS = [
     'django_extensions',
     'django_userforeignkey',
     'django_filters',
+    'django_celery_results',
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
 
 LOCAL_APPS = [
@@ -154,6 +157,7 @@ CACHES = {
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             "IGNORE_EXCEPTIONS": True,  # Optional but helpful in dev to prevent Redis outages breaking app
+            "PASSWORD": config('REDIS_PASSWORD'),
         }
     },
 }
@@ -301,7 +305,8 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',    # rate limit for anonymous users (login is anon) can be adjusted
         'user': '1000/day', # Authenticated users can have higher limits
-    }
+    },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 
@@ -424,11 +429,33 @@ SERVER_EMAIL = config('SERVER_EMAIL')
 # ------------------------------------------------------------------------------
 EXPRESS_SERVICE_URL = config('EXPRESS_SERVICE_URL')
 
-# Stripe (Sandbox)
+# DRF Spectacular
 # ------------------------------------------------------------------------------
-STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY')
-STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
-# STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET")
+SPECTACULAR_SETTINGS = {
+    "TITLE": "FinMark API",
+    "DESCRIPTION": "API documentation for FinMark by Imperionite",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
+# Celery
+# ------------------------------------------------------------------------------
+CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Optional: avoid duplicate task execution (if using Redis as broker)
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+# Optional: Track tasks
+CELERY_TRACK_STARTED = True
+CELERY_SEND_EVENTS = True
 
 # Security
 # ------------------------------------------------------------------------------

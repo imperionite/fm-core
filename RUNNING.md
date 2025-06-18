@@ -62,6 +62,15 @@ chmod +x build_dev.sh # for DRF debug
 chmod +x build.sh # for render.com
 chmod +x K6/run_k6_tests.sh # for K6 load testing
 
+# Site settings (Debug)
+site.domain = 'localhost:8000'
+site.name = 'Local Dev'
+
+# Site settings (Prod)
+site.domain = 'yourapp.onrender.com' # (No http/https, no trailing slashes)
+site.name = 'App Name'
+
+# K6
 ./build.sh # run the script on render
 ./build_dev.sh # run to build DRF on debug mode
 ./K6/run_k6_tests.sh # run to automate the K6 load testing
@@ -83,8 +92,14 @@ SELECT * FROM posts_user;
 SELECT id, username, email, password, created_at, date_joined, is_staff FROM posts_user;
 \q # quit psql
 
-# redis
+# redis inside docker container
 docker ps
 docker exec -it <redis_container_name> redis-cli
+AUTH mypassword
+ping
+# will return PONG
 
+# Celery
+# run celery from Django root directory
+celery -A core worker --loglevel=info
 ```
