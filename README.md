@@ -108,7 +108,8 @@ If deployed as a microservice in a distributed system:
 16. [Third-Party Services and Integrations](#third-party-services-and-integrations)
 17. [Deployment & Operations](#deployment--operations)
 18. [Operational Considerations](#operational-considerations)
-19. [Appendix: Mermaid Diagrams](#appendix-mermaid-diagrams)
+19. [Unit Test Coverage](#unit-test-coverage)
+20. [Appendix: Mermaid Diagrams](#appendix-additional-diagrams)
 
 ---
 
@@ -441,12 +442,85 @@ Payments can be triggered via user POST requests or admin actions. The backend v
 
 ---
 
-## Appendix: Mermaid Diagrams
+## Unit Test Coverage
+
+The system includes automated tests focused on validating business-critical paths: cart functionality, order lifecycle, payment handling, and user permission enforcement. The tests are implemented using `pytest` with Django-specific enhancements and mocking tools.
+
+### 🧪 Framework Overview
+
+| Tool            | Purpose                     |
+| --------------- | --------------------------- |
+| `pytest`        | Test runner                 |
+| `pytest-django` | Django-specific integration |
+| `pytest-mock`   | Patching and mocking        |
+| `model_bakery`  | Model instance generation   |
+| `pytest-cov`    | Code coverage tracking      |
+
+**Command used:**
+
+```bash
+pytest --cov --tb=short
+```
+
+---
+
+### Test Directory Structure
+
+```text
+fm-core/
+├── conftest.py
+├── orders/
+│   └── tests/
+│       ├── test_cart.py
+│       ├── test_checkout.py
+│       └── test_payment.py
+└── users/
+    └── tests/
+        ├── test_permissions.py
+        └── test_views.py
+```
+
+---
+
+### Covered Unit Tests (9 total)
+
+| Module                | Test Case                                      | Description                                                                                    |
+| --------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `test_cart.py`        | `test_add_service_to_cart`                     | Validates that a service can be added to the user's cart if not already present.               |
+|                       | `test_get_cart_contents`                       | Ensures cart retrieval returns expected cart data for the authenticated user.                  |
+| `test_checkout.py`    | `test_checkout_creates_order`                  | Confirms that a valid checkout operation creates a corresponding order and clears the cart.    |
+| `test_payment.py`     | `test_order_payment_flow`                      | Verifies successful payment updates order status and triggers Celery-based email confirmation. |
+| `test_views.py`       | `test_user_deactivate_by_self`                 | Asserts that users can self-deactivate their accounts.                                         |
+|                       | `test_user_deactivate_by_admin`                | Confirms admins can deactivate other users.                                                    |
+| `test_permissions.py` | `test_is_owner_or_admin_granted_to_owner`      | Tests owner access to protected resources.                                                     |
+|                       | `test_is_owner_or_admin_granted_to_admin`      | Validates admin override access.                                                               |
+|                       | `test_is_owner_or_admin_denied_for_other_user` | Denies access when requester is neither owner nor admin.                                       |
+
+---
+
+### Final Coverage Report Summary
+
+| File              | Coverage |
+| ----------------- | -------- |
+| `orders/views.py` | 51%      |
+| `users/views.py`  | 81%      |
+| `orders/tasks.py` | 45%      |
+| **Total**         | **83%**  |
+
+---
+
+### Warnings (Non-blocking)
+
+Most warnings are:
+
+* **Static files directory missing** (harmless for test runs)
+* **Deprecation warnings** from `dj-rest-auth` related to signup field settings
+
+---
+
+## Appendix: Additional Diagrams
 
 See `Architecture` and `Lifecycle` sections for system-wide diagrams.
-
-
-## 11. Appendix: Additional Diagrams
 
 ### JWT Authentication Flow
 
@@ -473,4 +547,51 @@ graph LR
     C -->|Send to Broker| D[Redis Queue]
     D --> E[Celery Worker]
     E --> F[Execute Task]
+```
+
+### Project Tree
+
+```bash
+fm-core/
+├── core/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── celery.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+│
+├── users/
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── permissions.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+│
+├── orders/
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tasks.py
+│   ├── urls.py
+│   ├── views.py
+│   └── tests.py
+│
+├── templates/
+│   └── (email templates, etc.)
+│
+├── staticfiles/
+│   └── (collected static files for deployment)
+│
+├── manage.py
+├── requirements.txt
+├── .env  # (environment variables file, not committed)
+├── .gitignore
+└── README.md
 ```
