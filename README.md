@@ -74,12 +74,6 @@ If deployed as a microservice in a distributed system:
 
 ---
 
-# fm-core Documentation
-
-**FM-Core** is the transactional and orchestration backbone of the Finer FinMark platform’s online ordering and commerce domain. Built with Django REST Framework (DRF), it exposes RESTful endpoints for user authentication, cart management, order processing, and payment orchestration. The project is designed for scalability, security, and extensibility.
-
----
-
 ## Table of Contents
 
 1. [Overview](#overview)
