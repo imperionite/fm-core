@@ -127,7 +127,7 @@ The system is designed for high-availability deployment in containerized environ
 ```mermaid
 graph TD
     subgraph Client["Client Layer"]
-        A[Frontend SPA<br/>React/Vue]
+        A[Frontend SPA<br/>React]
     end
     
     subgraph Auth["Authentication"]
