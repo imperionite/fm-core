@@ -126,26 +126,60 @@ The system is designed for high-availability deployment in containerized environ
 
 ```mermaid
 graph TD
-    subgraph Client Layer
-        A[Frontend SPA (React/Vue)]
+    subgraph Client["Client Layer"]
+        A[Frontend SPA<br/>React/Vue]
     end
-    subgraph Backend Services
+    
+    subgraph Auth["Authentication"]
+        G[Google OAuth2<br/>Provider]
+    end
+    
+    subgraph CoreServices["Core Services"]
         B[Django REST API]
-        C[Celery Worker]
-        D[Redis: Cache & Broker]
-        E[PostgreSQL Database]
-        F[Mailgun: Email Service]
-        G[Google OAuth2 Provider]
+        E[(PostgreSQL<br/>Database)]
     end
-
+    
+    subgraph AsyncServices["Asynchronous Services"]
+        C[Celery Worker]
+        D[(Redis Cache<br/>& Message Broker)]
+        F[Mailgun Email<br/>Service]
+    end
+    
+    %% Authentication Flow
+    A -->|OAuth Redirect| G
+    G -->|Token| A
+    
+    %% API Interactions
     A -->|REST Calls| B
-    B -->|DB Ops| E
+    
+    %% Database Operations
+    B -->|CRUD Ops| E
+    
+    %% Asynchronous Operations
     B -->|Cache Read/Write| D
     B -->|Dispatch Task| C
     C -->|Track Jobs| D
     C -->|Send Email| F
-    A -->|OAuth Redirect| G
+    
+    %% Error Handling
+    C -.->|Failed Tasks| D
+    F -.->|Delivery Failures| D
+    
+    %% Styling
+    classDef client fill:#90CAF9,stroke:#1565C0,color:#000
+    classDef auth fill:#FFE082,stroke:#FFA000,color:#000
+    classDef service fill:#A5D6A7,stroke:#2E7D32,color:#000
+    classDef storage fill:#FFCC80,stroke:#EF6C00,color:#000
+    classDef error stroke-dasharray: 5 5
+    
+    class A client
+    class G auth
+    class B,C,F service
+    class D,E storage
 ```
+
+The diagram follows the principle of separation of concerns while maintaining clear communication paths between components. Each layer has distinct responsibilities, making the architecture easier to maintain and scale.
+
 
 ### Request Lifecycle
 
