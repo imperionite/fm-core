@@ -102,4 +102,7 @@ ping
 # Celery
 # run celery from Django root directory
 celery -A core worker --loglevel=info
+
+# Pytest
+pytest --cov --tb=short
 ```
