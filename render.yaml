@@ -1,0 +1,76 @@
+services:
+  - type: web
+    name: your-django-app
+    env: python
+    plan: free
+    branch: main  
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn your_project_name.wsgi:application"
+    envVars:
+      - key: DEBUG
+        value: "False"  # override for production
+      - key: SECRET_KEY
+        fromSecret: SECRET_KEY
+      - key: DATABASE_URL
+        fromSecret: DATABASE_URL
+      - key: SIGNING_KEY
+        fromSecret: SIGNING_KEY
+      - key: SU_USERNAME
+        fromSecret: SU_USERNAME
+      - key: SU_EMAIL
+        fromSecret: SU_EMAIL
+      - key: SU_PASSWORD
+        fromSecret: SU_PASSWORD
+      - key: STAFF_USERNAME
+        fromSecret: STAFF_USERNAME
+      - key: STAFF_EMAIL
+        fromSecret: STAFF_EMAIL
+      - key: TEST_USER_EMAIL
+        fromSecret: TEST_USER_EMAIL
+      - key: CALLBACK_URL
+        value: "https://your-production-callback-url.com"  # update accordingly
+      - key: GOOGLE_CLIENT_ID
+        fromSecret: GOOGLE_CLIENT_ID
+      - key: GOOGLE_CLIENT_SECRET
+        fromSecret: GOOGLE_CLIENT_SECRET
+      - key: MAILGUN_API_KEY
+        fromSecret: MAILGUN_API_KEY
+      - key: MAILGUN_SENDER_DOMAIN
+        fromSecret: MAILGUN_SENDER_DOMAIN
+      - key: DEFAULT_FROM_EMAIL
+        value: "noreply@arnelimperial.com"
+      - key: SERVER_EMAIL
+        value: "issues@arnelimperial.com"
+      - key: LOGIN_URL
+        value: "https://your-production-login-url.com"  # update accordingly
+      - key: REDIS_URL
+        fromSecret: REDIS_URL
+      - key: EXPRESS_SERVICE_URL
+        value: "https://your-production-express-api.com/api/services"  # update accordingly
+      - key: CELERY_BROKER_URL
+        fromSecret: CELERY_BROKER_URL
+      - key: CELERY_RESULT_BACKEND
+        fromSecret: CELERY_RESULT_BACKEND
+
+  - type: worker
+    name: your-django-celery-worker
+    env: python
+    plan: free
+    branch: main
+    buildCommand: "./build.sh"
+    startCommand: "celery -A core worker --loglevel=info"
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        fromSecret: SECRET_KEY
+      - key: DATABASE_URL
+        fromSecret: DATABASE_URL
+      - key: SIGNING_KEY
+        fromSecret: SIGNING_KEY
+      - key: REDIS_URL
+        fromSecret: REDIS_URL
+      - key: CELERY_BROKER_URL
+        fromSecret: CELERY_BROKER_URL
+      - key: CELERY_RESULT_BACKEND
+        fromSecret: CELERY_RESULT_BACKEND

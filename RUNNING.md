@@ -52,7 +52,7 @@ python manage.py assign_roles
 python manage.py flush
 
 # Render start command
-gunicorn --pythonpath connectly-api --workers 3 --bind 0.0.0.0:$PORT core.wsgi:application
+gunicorn --workers 3 --bind 0.0.0.0:$PORT core.wsgi:application # the core folder is in the root repo
 
 # Render build command
 ./build.sh
