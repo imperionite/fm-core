@@ -12,7 +12,8 @@ import requests
 from .models import Cart, CartItem, Order, OrderItem, Payment
 from .serializers import CartSerializer, CartItemSerializer, OrderSerializer, OrderStatusUpdateSerializer, PaymentSerializer
 from utils.cache_keys import cart_key, orders_list_key, order_detail_key, service_key
-from .tasks import send_order_confirmation_email
+
+from orders.utils.email import trigger_order_confirmation_email
 
 EXPRESS_SERVICE_URL = settings.EXPRESS_SERVICE_URL
 
@@ -240,7 +241,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             "total": order.total_price,
         }
 
-        # Trigger email confirmation via Celery
-        send_order_confirmation_email.delay(order.user.email, order_data)
+        # Trigger email confirmation via Thread + Mailgun API direct call
+        trigger_order_confirmation_email(order.user.email, order_data)
 
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)

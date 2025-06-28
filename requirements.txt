@@ -4,7 +4,6 @@ argon2-cffi-bindings==21.2.0
 asgiref==3.8.1
 attrs==25.3.0
 billiard==4.2.1
-celery==5.5.3
 certifi==2025.4.26
 cffi==1.17.1
 charset-normalizer==3.4.2
@@ -26,7 +25,6 @@ django-filter==25.1
 django-redis==5.4.0
 django-templated-mail==1.1.1
 django-userforeignkey==0.5.0
-django_celery_results==2.6.0
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
 djoser==2.3.1

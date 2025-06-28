@@ -1,0 +1,15 @@
+<html>
+  <body>
+    <p>Hi {{ email }},</p>
+    <p>Here's a summary of your order:</p>
+    <ul>
+      {% for item in order.items %}
+      <li>{{ item.name }} (x{{ item.quantity }}): ₱{{ item.price }}</li>
+      {% endfor %}
+    </ul>
+    <p><strong>Total:</strong> ₱{{ order.total }}</p>
+    <p>We’re processing your subscription and will notify you once it is available.</p>
+    <p>Thank you!</p>
+    <p>— The FinMark by Imperionite Team</p>
+  </body>
+</html>

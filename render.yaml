@@ -52,25 +52,4 @@ services:
       - key: CELERY_RESULT_BACKEND
         fromSecret: CELERY_RESULT_BACKEND
 
-  - type: worker
-    name: your-django-celery-worker
-    env: python
-    plan: free
-    branch: main
-    buildCommand: "./build.sh"
-    startCommand: "celery -A core worker --loglevel=info"
-    envVars:
-      - key: DEBUG
-        value: "False"
-      - key: SECRET_KEY
-        fromSecret: SECRET_KEY
-      - key: DATABASE_URL
-        fromSecret: DATABASE_URL
-      - key: SIGNING_KEY
-        fromSecret: SIGNING_KEY
-      - key: REDIS_URL
-        fromSecret: REDIS_URL
-      - key: CELERY_BROKER_URL
-        fromSecret: CELERY_BROKER_URL
-      - key: CELERY_RESULT_BACKEND
-        fromSecret: CELERY_RESULT_BACKEND
+  

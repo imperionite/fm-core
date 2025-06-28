@@ -1,0 +1,15 @@
+Hi {{ email }},
+
+Here's a summary of your order:
+
+{% for item in order.items %}
+- {{ item.name }} (x{{ item.quantity }}): ₱{{ item.price }}
+{% endfor %}
+
+Total: ₱{{ order.total }}
+
+We’re processing your subscription and will notify you once it is available.
+
+Thank you!
+
+— The FinMark by Imperionite Team

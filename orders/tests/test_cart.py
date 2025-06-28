@@ -1,6 +1,5 @@
 import pytest
 
-
 @pytest.mark.django_db
 def test_add_service_to_cart(auth_client, mocker):
     mock_service = {"name": "Premium Plan", "price": 999.99}

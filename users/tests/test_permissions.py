@@ -1,4 +1,3 @@
-# users/tests/test_permissions.py
 import pytest
 from users.permissions import IsOwnerOrAdmin
 from rest_framework.test import APIRequestFactory

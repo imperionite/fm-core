@@ -46,7 +46,6 @@ THIRD_PARTY_APPS = [
     'django_extensions',
     'django_userforeignkey',
     'django_filters',
-    'django_celery_results',
     "drf_spectacular",
     "drf_spectacular_sidecar",
 ]
@@ -228,20 +227,14 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_EXPOSE_HEADERS = ['Content-Type', 'authorization', 'X-CSRFToken', 'Access-Control-Allow-Origin: *',]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:8000',
-    'http://localhost:8000',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://marmite.onrender.com',
-]
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    cast=Csv()
+)
 
-CORS_ORIGIN_WHITELIST = (
-    'http://127.0.0.1:8000',
-    'http://localhost:8000',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://marmite.onrender.com',
+CORS_ORIGIN_WHITELIST = config(
+    'CORS_ORIGIN_WHITELIST',
+    cast=Csv()
 )
 
 CORS_ALLOW_HEADERS = default_headers + (
@@ -347,7 +340,6 @@ CALLBACK_URL = config('CALLBACK_URL')
 
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = CALLBACK_URL
 
-
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['email', 'profile', 'openid'],
@@ -399,13 +391,10 @@ DJOSER = {
     'ACTIVATION_URL': config('ACTIVATION_URL', default='auth/users/activate/{uid}/{token}'),
     'HIDE_USERS': False,
     'SOCIAL_AUTH_TOKEN_STRATEGY': 'djoser.social.token.jwt.TokenStrategy',
-    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': [
-        'http://127.0.0.1:8000',
-        'http://127.0.0.1:5173/login',
-        'http://127.0.0.1:8000/api/social-credentials/google/',
-        'http://127.0.0.1:8000/accounts/google/login/callback/',
-        'http://127.0.0.1:8000/auth/users/activate',
-    ],
+    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': config(
+        'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS',
+        cast=Csv()
+    ),
     'SERIALIZERS': {
         'user': 'djoser.serializers.UserSerializer',
         'current_user': 'djoser.serializers.UserSerializer',
@@ -413,6 +402,8 @@ DJOSER = {
     },
 
 }
+
+
 
 # Anymail
 # ------------------------------------------------------------------------------
@@ -438,25 +429,6 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-# Celery
-# ------------------------------------------------------------------------------
-CELERY_BROKER_URL = config('CELERY_BROKER_URL')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
-
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_ENABLE_UTC = True
-
-# Optional: avoid duplicate task execution (if using Redis as broker)
-CELERY_TASK_ACKS_LATE = True
-CELERY_WORKER_PREFETCH_MULTIPLIER = 1
-
-# Optional: Track tasks
-CELERY_TRACK_STARTED = True
-CELERY_SEND_EVENTS = True
-
 # Security
 # ------------------------------------------------------------------------------
 SESSION_COOKIE_HTTPONLY = False
@@ -465,13 +437,10 @@ X_FRAME_OPTIONS = 'DENY'
 
 CSRF_COOKIE_HTTPONLY = False
 
-CSRF_TRUSTED_ORIGINS = [
-        'http://127.0.0.1:8000',
-        'http://localhost:8000',
-        'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'https://marmite.onrender.com',
-]
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    cast=Csv()
+)
 
 if not settings.DEBUG:
 
