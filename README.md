@@ -589,3 +589,7 @@ fm-core/
 ├── .gitignore
 └── README.md
 ```
+
+### Consideration
+
+The feature of using a background worker with Celery as been omitted on the main branch of this project and is archived in `ms2` branch.

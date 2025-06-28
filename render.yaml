@@ -1,14 +1,14 @@
 services:
   - type: web
-    name: your-django-app
+    name: fm-core
     env: python
     plan: free
     branch: main  
     buildCommand: "./build.sh"
-    startCommand: "gunicorn your_project_name.wsgi:application"
+    startCommand: "gunicorn --workers 3 --bind 0.0.0.0:$PORT core.wsgi:application"
     envVars:
       - key: DEBUG
-        value: "False"  # override for production
+        value: "False"
       - key: SECRET_KEY
         fromSecret: SECRET_KEY
       - key: DATABASE_URL
