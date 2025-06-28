@@ -28,7 +28,7 @@ services:
       - key: TEST_USER_EMAIL
         fromSecret: TEST_USER_EMAIL
       - key: CALLBACK_URL
-        value: "https://your-production-callback-url.com"  # update accordingly
+        fromSecret: CALLBACK_URL
       - key: GOOGLE_CLIENT_ID
         fromSecret: GOOGLE_CLIENT_ID
       - key: GOOGLE_CLIENT_SECRET
@@ -38,18 +38,26 @@ services:
       - key: MAILGUN_SENDER_DOMAIN
         fromSecret: MAILGUN_SENDER_DOMAIN
       - key: DEFAULT_FROM_EMAIL
-        value: "noreply@arnelimperial.com"
+        fromSecret: DEFAULT_FROM_EMAIL
       - key: SERVER_EMAIL
-        value: "issues@arnelimperial.com"
+        fromSecret: SERVER_EMAIL
       - key: LOGIN_URL
-        value: "https://your-production-login-url.com"  # update accordingly
+        fromSecret: LOGIN_URL
       - key: REDIS_URL
         fromSecret: REDIS_URL
+      - key: REDIS_PASSWORD
+        fromSecret: REDIS_PASSWORD
       - key: EXPRESS_SERVICE_URL
-        value: "https://your-production-express-api.com/api/services"  # update accordingly
-      - key: CELERY_BROKER_URL
-        fromSecret: CELERY_BROKER_URL
-      - key: CELERY_RESULT_BACKEND
-        fromSecret: CELERY_RESULT_BACKEND
+        fromSecret: EXPRESS_SERVICE_URL
+      - key: CORS_ALLOWED_ORIGINS
+        fromSecret: CORS_ALLOWED_ORIGINS
+      - key: CORS_ORIGIN_WHITELIST
+        fromSecret: CORS_ORIGIN_WHITELIST
+      - key: CSRF_TRUSTED_ORIGINS
+        fromSecret: CSRF_TRUSTED_ORIGINS
+      - key: SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
+        fromSecret: SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
+
+   
 
   
