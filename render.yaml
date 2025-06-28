@@ -57,6 +57,8 @@ services:
         fromSecret: CSRF_TRUSTED_ORIGINS
       - key: SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
         fromSecret: SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
+      - key: ALLOWED_HOSTS
+        fromSecret: ALLOWED_HOSTS
 
    
 
