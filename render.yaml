@@ -3,16 +3,20 @@ services:
     name: fm-core
     env: python
     plan: free
-    branch: main  
+    branch: main
     buildCommand: "./build.sh"
     startCommand: "gunicorn --workers 3 --bind 0.0.0.0:$PORT core.wsgi:application"
     envVars:
-      - key: DEBUG
-        value: "False"
-      - key: SECRET_KEY
-        fromSecret: SECRET_KEY
+      - key: DB_PASSWORD
+        fromSecret: DB_PASSWORD
       - key: DATABASE_URL
         fromSecret: DATABASE_URL
+      - key: SECRET_KEY
+        fromSecret: SECRET_KEY
+      - key: PORT
+        value: "8000"
+      - key: DEBUG
+        value: "False"
       - key: SIGNING_KEY
         fromSecret: SIGNING_KEY
       - key: SU_USERNAME
@@ -28,7 +32,7 @@ services:
       - key: TEST_USER_EMAIL
         fromSecret: TEST_USER_EMAIL
       - key: CALLBACK_URL
-        fromSecret: CALLBACK_URL
+        value: "http://www.arnelimperial.com"
       - key: GOOGLE_CLIENT_ID
         fromSecret: GOOGLE_CLIENT_ID
       - key: GOOGLE_CLIENT_SECRET
@@ -36,32 +40,24 @@ services:
       - key: MAILGUN_API_KEY
         fromSecret: MAILGUN_API_KEY
       - key: MAILGUN_SENDER_DOMAIN
-        fromSecret: MAILGUN_SENDER_DOMAIN
+        value: "arnelimperial.com"
       - key: DEFAULT_FROM_EMAIL
-        fromSecret: DEFAULT_FROM_EMAIL
+        value: "noreply@arnelimperial.com"
       - key: SERVER_EMAIL
-        fromSecret: SERVER_EMAIL
+        value: "issues@arnelimperial.com"
       - key: LOGIN_URL
-        fromSecret: LOGIN_URL
+        value: "https://www.arnelimperial.com/login"
       - key: REDIS_URL
         fromSecret: REDIS_URL
       - key: REDIS_PASSWORD
         fromSecret: REDIS_PASSWORD
       - key: EXPRESS_SERVICE_URL
-        fromSecret: EXPRESS_SERVICE_URL
+        value: "https://fm-service.onrender.com/api/services"
       - key: CORS_ALLOWED_ORIGINS
-        fromSecret: CORS_ALLOWED_ORIGINS
+        value: "https://fm-core.onrender.com,https://fm-service.onrender.com,https://www.arnelimperial.com"
       - key: CORS_ORIGIN_WHITELIST
-        fromSecret: CORS_ORIGIN_WHITELIST
+        value: "https://fm-core.onrender.com,https://fm-service.onrender.com,https://www.arnelimperial.com"
       - key: CSRF_TRUSTED_ORIGINS
-        fromSecret: CSRF_TRUSTED_ORIGINS
+        value: "https://fm-core.onrender.com,https://fm-service.onrender.com,https://www.arnelimperial.com"
       - key: SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
-        fromSecret: SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
-      - key: ALLOWED_HOSTS
-        fromSecret: ALLOWED_HOSTS
-      - key: PORT
-        fromSecret: PORT
-
-   
-
-  
+        value: "https://fm-core.onrender.com,https://www.arnelimperial.com/login,https://fm-core.onrender.com/api/social-credentials/google/,https://fm-core.onrender.com/accounts/google/login/callback/,https://fm-core.onrender.com/auth/users/activate"
