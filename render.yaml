@@ -59,6 +59,8 @@ services:
         fromSecret: SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
       - key: ALLOWED_HOSTS
         fromSecret: ALLOWED_HOSTS
+      - key: PORT
+        fromSecret: PORT
 
    
 
