@@ -143,31 +143,41 @@ DATABASES = {
     )
 }
 
-# Disable server-side cursors when using PgBouncer in transaction pooling mode
-DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
-
 # Caching
 REDIS_URL = config('REDIS_URL')
 
+# Default Redis cache for dev/prod
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': REDIS_URL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            "IGNORE_EXCEPTIONS": True,  # Optional but helpful in dev to prevent Redis outages breaking app
+            "IGNORE_EXCEPTIONS": True,
             "PASSWORD": config('REDIS_PASSWORD'),
         }
     },
 }
 
-# Override database settings for unit testing
+# Override settings for unit tests
 if 'test' in sys.argv:
+    # Use in-memory SQLite DB for speed
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',  # Use in-memory SQLite for faster tests
+        'NAME': ':memory:',
     }
 
+    # Use fakeredis in-memory cache for tests
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': 'fakeredis://', 
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'IGNORE_EXCEPTIONS': True,
+            }
+        }
+    }
 
 
 # Password validation
