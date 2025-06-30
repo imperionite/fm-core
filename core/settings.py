@@ -135,6 +135,7 @@ if IS_TESTING:
             "NAME": ":memory:",
         }
     }
+
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
@@ -145,35 +146,39 @@ if IS_TESTING:
             },
         }
     }
+
 else:
-    db_from_env = config("DATABASE_URL")
-    redis_url = config("REDIS_URL")
-    redis_password = config("REDIS_PASSWORD")
     DATABASES = {
         "default": dj_database_url.config(
-            default=db_from_env,
+            default="postgres://postgres:postgres@localhost:5432/postgres",
             conn_max_age=600,
             conn_health_checks=True,
         )
     }
+
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": redis_url,
+            "LOCATION": config(
+                "REDIS_URL", default="redis://localhost:6379/1"
+            ),  # <-- fallback
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
                 "IGNORE_EXCEPTIONS": True,
-                "PASSWORD": redis_password,
+                "PASSWORD": config("REDIS_PASSWORD", default=""),  # fallback: no auth
             },
         }
     }
+
 
 # -------------------------------------------------------------------
 # Authentication
 # -------------------------------------------------------------------
 AUTH_USER_MODEL = "users.User"
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -194,10 +199,22 @@ AUTHENTICATION_BACKENDS = [
 # -------------------------------------------------------------------
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
-CORS_EXPOSE_HEADERS = ["Content-Type", "authorization", "X-CSRFToken", "Access-Control-Allow-Origin: *"]
+CORS_EXPOSE_HEADERS = [
+    "Content-Type",
+    "authorization",
+    "X-CSRFToken",
+    "Access-Control-Allow-Origin: *",
+]
 CORS_ALLOW_HEADERS = default_headers + (
-    "accept", "accept-encoding", "authorization", "content-type",
-    "dnt", "origin", "user-agent", "x-csrftoken", "x-requested-with"
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 )
 CORS_ALLOW_METHODS = ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"]
 
@@ -294,10 +311,14 @@ DJOSER = {
     "LOGIN_FIELD": "email",
     "USERNAME_RESET_CONFIRM_URL": "auth/username/reset/confirm/{uid}/{token}",
     "PASSWORD_RESET_CONFIRM_URL": "auth/password/reset/confirm/{uid}/{token}",
-    "ACTIVATION_URL": config("ACTIVATION_URL", default="auth/users/activate/{uid}/{token}"),
+    "ACTIVATION_URL": config(
+        "ACTIVATION_URL", default="auth/users/activate/{uid}/{token}"
+    ),
     "HIDE_USERS": False,
     "SOCIAL_AUTH_TOKEN_STRATEGY": "djoser.social.token.jwt.TokenStrategy",
-    "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": config("SOCIAL_AUTH_ALLOWED_REDIRECT_URIS", cast=Csv(), default=""),
+    "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": config(
+        "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS", cast=Csv(), default=""
+    ),
     "SERIALIZERS": {
         "user": "djoser.serializers.UserSerializer",
         "current_user": "djoser.serializers.UserSerializer",
@@ -332,9 +353,13 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=True, cast=bool)
     CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=True, cast=bool)
     SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=31536000, cast=int)
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = config("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True, cast=bool)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config(
+        "SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True, cast=bool
+    )
     SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=True, cast=bool)
-    SECURE_CONTENT_TYPE_NOSNIFF = config("SECURE_CONTENT_TYPE_NOSNIFF", default=True, cast=bool)
+    SECURE_CONTENT_TYPE_NOSNIFF = config(
+        "SECURE_CONTENT_TYPE_NOSNIFF", default=True, cast=bool
+    )
 
 # -------------------------------------------------------------------
 # Spectacular API Docs
@@ -345,4 +370,3 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
-
