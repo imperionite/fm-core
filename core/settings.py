@@ -1,23 +1,30 @@
 import os
 import sys
-from decouple import config, Csv
-import dj_database_url  # type: ignore
 from pathlib import Path
 from datetime import timedelta
-from django.conf import settings
+from decouple import config, Csv
+import dj_database_url  # type: ignore
 from corsheaders.defaults import default_headers
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# -------------------------------------------------------------------
+# Path & Basic Config
+# -------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
+IS_TESTING = "test" in sys.argv
 
-SECRET_KEY = config("SECRET_KEY", default="secretkey")
+# Only access environment variables if not running tests
+if not IS_TESTING:
+    SECRET_KEY = config("SECRET_KEY", default="secretkey")
+    DEBUG = config("DEBUG", default=False, cast=bool)
+    ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+else:
+    SECRET_KEY = "test-secret-key"
+    DEBUG = True
+    ALLOWED_HOSTS = ["localhost"]
 
-DEBUG = config("DEBUG", default=False, cast=bool)
-
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost, 127.0.0.1", cast=Csv())
-
-# Application definition & Middlewares
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Applications & Middleware
+# -------------------------------------------------------------------
 DJANGO_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -55,7 +62,6 @@ LOCAL_APPS = [
     "orders.apps.OrdersConfig",
 ]
 
-
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
@@ -75,19 +81,14 @@ MIDDLEWARE = [
     "django_userforeignkey.middleware.UserForeignKeyMiddleware",
 ]
 
-# Common & Templates
-# ------------------------------------------------------------------------------
-
-AUTH_USER_MODEL = "users.User"
-
+# -------------------------------------------------------------------
+# Templates
+# -------------------------------------------------------------------
 ROOT_URLCONF = "core.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            os.path.join(BASE_DIR, "templates"),
-        ],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -101,48 +102,39 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = "core.wsgi.application"
 
-LANGUAGE_CODE = "en-us"
-
-TIME_ZONE = "UTC"
-
-USE_I18N = True
-
-USE_TZ = True
-
-SITE_ID = 1
-
-# Default primary key field type
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# Static files (For Django Admin)
+# -------------------------------------------------------------------
+# Static Files
+# -------------------------------------------------------------------
 STATIC_URL = "/static/"
-
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
-
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# -------------------------------------------------------------------
+# Internationalization
+# -------------------------------------------------------------------
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+SITE_ID = 1
 
-# Database & Cache
-# ------------------------------------------------------------------------------
-
-if "test" in sys.argv:
-    # Use in-memory SQLite DB for tests
+# -------------------------------------------------------------------
+# Database & Caching
+# -------------------------------------------------------------------
+if IS_TESTING:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": ":memory:",
         }
     }
-
-    # Use fakeredis in-memory cache for tests
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
@@ -153,12 +145,10 @@ if "test" in sys.argv:
             },
         }
     }
-
 else:
     db_from_env = config("DATABASE_URL")
     redis_url = config("REDIS_URL")
     redis_password = config("REDIS_PASSWORD")
-
     DATABASES = {
         "default": dj_database_url.config(
             default=db_from_env,
@@ -166,7 +156,6 @@ else:
             conn_health_checks=True,
         )
     }
-
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
@@ -179,113 +168,54 @@ else:
         }
     }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+# -------------------------------------------------------------------
+# Authentication
+# -------------------------------------------------------------------
+AUTH_USER_MODEL = "users.User"
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
-
-# Password & Auth Backends
-# ------------------------------------------------------------------------------
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
     "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
 ]
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
-
-# allow to use username or email on user's login
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-
-# CORS
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
+# CORS Settings
+# -------------------------------------------------------------------
 CORS_ORIGIN_ALLOW_ALL = False
-
 CORS_ALLOW_CREDENTIALS = True
-
-CORS_EXPOSE_HEADERS = [
-    "Content-Type",
-    "authorization",
-    "X-CSRFToken",
-    "Access-Control-Allow-Origin: *",
-]
-
-CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", cast=Csv())
-
-CORS_ORIGIN_WHITELIST = config("CORS_ORIGIN_WHITELIST", cast=Csv())
-
+CORS_EXPOSE_HEADERS = ["Content-Type", "authorization", "X-CSRFToken", "Access-Control-Allow-Origin: *"]
 CORS_ALLOW_HEADERS = default_headers + (
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
+    "accept", "accept-encoding", "authorization", "content-type",
+    "dnt", "origin", "user-agent", "x-csrftoken", "x-requested-with"
 )
+CORS_ALLOW_METHODS = ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"]
 
+if not IS_TESTING:
+    CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", cast=Csv(), default="")
+    CORS_ORIGIN_WHITELIST = config("CORS_ORIGIN_WHITELIST", cast=Csv(), default="")
+    CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", cast=Csv(), default="")
 
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
-]
-
-CORS_PREFLIGHT_MAX_AGE = 86400
-
-
-# Django-Rest-Framework
-# -------------------------------------------------------------------------------
-
+# -------------------------------------------------------------------
+# Django REST Framework & JWT
+# -------------------------------------------------------------------
 DEFAULT_RENDERER_CLASSES = ("rest_framework.renderers.JSONRenderer",)
-
-
 if DEBUG:
-    DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + (
-        "rest_framework.renderers.BrowsableAPIRenderer",
-    )
+    DEFAULT_RENDERER_CLASSES += ("rest_framework.renderers.BrowsableAPIRenderer",)
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        # 'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
         "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
@@ -293,21 +223,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-    # Rate limit (Throttling)
     "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle",  # For anonymous users
-        "rest_framework.throttling.UserRateThrottle",  # For authenticated users
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "10/min",  # rate limit for anonymous users (login is anon) can be adjusted
-        "user": "1000/day",  # Authenticated users can have higher limits
+        "anon": "10/min",
+        "user": "1000/day",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
-
-
-# Simple JWT
-# ------------------------------------------------------------------------------
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
@@ -319,83 +244,60 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS512",
 }
 
-# ADMIN
-# ------------------------------------------------------------------------------
-# Django Admin URL.
-ADMIN_URL = config("ADMIN_URL", default="admin/")
+# -------------------------------------------------------------------
+# Admin & URLs
+# -------------------------------------------------------------------
+if not IS_TESTING:
+    ADMIN_URL = config("ADMIN_URL", default="admin/")
+    LOGIN_URL = config("LOGIN_URL", default="/auth/login/")
+    CALLBACK_URL = config("CALLBACK_URL", default="/auth/callback/")
+else:
+    ADMIN_URL = "admin/"
+    LOGIN_URL = "/auth/login/"
+    CALLBACK_URL = "/auth/callback/"
 
-ADMINS = [("""FM-CORE API""", "arnelimperial.com")]
-
+ADMINS = [("FM-CORE API", "arnelimperial.com")]
 MANAGERS = ADMINS
 
-# Django-Allauth
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Django-Allauth, Djoser, Anymail
+# -------------------------------------------------------------------
 ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2"]
 ACCOUNT_LOGIN_METHODS = ["email", "username"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_UNIQUE_EMAIL = True
-
-LOGIN_URL = config("LOGIN_URL")
-CALLBACK_URL = config("CALLBACK_URL")
-
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = CALLBACK_URL
 
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "SCOPE": ["email", "profile", "openid"],
-        "AUTH_PARAMS": {"access_type": "offline"},
-        "OAUTH_PKCE_ENABLED": True,
-        "APP": {
-            "client_id": config("GOOGLE_CLIENT_ID"),
-            "secret": config("GOOGLE_CLIENT_SECRET"),
-        },
+if not IS_TESTING:
+    SOCIALACCOUNT_PROVIDERS = {
+        "google": {
+            "SCOPE": ["email", "profile", "openid"],
+            "AUTH_PARAMS": {"access_type": "offline"},
+            "OAUTH_PKCE_ENABLED": True,
+            "APP": {
+                "client_id": config("GOOGLE_CLIENT_ID"),
+                "secret": config("GOOGLE_CLIENT_SECRET"),
+            },
+        }
     }
-}
 
-
-# Dj-Rest-Auth
-# ------------------------------------------------------------------------------
 REST_AUTH = {
     "USE_JWT": True,
-    #     # Name of access token cookie, remove this setting if you don't want access token to be sent as cookie
     "JWT_AUTH_COOKIE": "_auth",
-    #     # Name of refresh token cookie, remove this setting if you don't want refresh token to be sent as cookie
     "JWT_AUTH_REFRESH_COOKIE": "_refresh",
-    "JWT_AUTH_HTTPONLY": False,  # Makes sure refresh token is sent
+    "JWT_AUTH_HTTPONLY": False,
     "USER_DETAILS_SERIALIZER": "users.serializers.CustomUserDetailsSerializer",
 }
-
-SOCIAL_AUTH_JSONFIELD_ENABLED = True
-SOCIAL_AUTH_RAISE_EXCEPTIONS = False
-
-# Google Credentials
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config("GOOGLE_CLIENT_ID")
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config("GOOGLE_CLIENT_SECRET")
-SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
-    "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/userinfo.profile",
-    "openid",
-]
-
-SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ["first_name", "last_name"]
-
-
-# Djoser
-# ------------------------------------------------------------------------------
 
 DJOSER = {
     "LOGIN_FIELD": "email",
     "USERNAME_RESET_CONFIRM_URL": "auth/username/reset/confirm/{uid}/{token}",
     "PASSWORD_RESET_CONFIRM_URL": "auth/password/reset/confirm/{uid}/{token}",
-    "ACTIVATION_URL": config(
-        "ACTIVATION_URL", default="auth/users/activate/{uid}/{token}"
-    ),
+    "ACTIVATION_URL": config("ACTIVATION_URL", default="auth/users/activate/{uid}/{token}"),
     "HIDE_USERS": False,
     "SOCIAL_AUTH_TOKEN_STRATEGY": "djoser.social.token.jwt.TokenStrategy",
-    "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": config(
-        "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS", cast=Csv()
-    ),
+    "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": config("SOCIAL_AUTH_ALLOWED_REDIRECT_URIS", cast=Csv(), default=""),
     "SERIALIZERS": {
         "user": "djoser.serializers.UserSerializer",
         "current_user": "djoser.serializers.UserSerializer",
@@ -403,24 +305,40 @@ DJOSER = {
     },
 }
 
+# -------------------------------------------------------------------
+# Mail & Express
+# -------------------------------------------------------------------
+if not IS_TESTING:
+    ANYMAIL = {
+        "MAILGUN_API_KEY": config("MAILGUN_API_KEY"),
+        "MAILGUN_SENDER_DOMAIN": config("MAILGUN_SENDER_DOMAIN"),
+        "MAILGUN_API_URL": "https://api.eu.mailgun.net/v3",
+    }
+    EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+    DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
+    SERVER_EMAIL = config("SERVER_EMAIL")
+    EXPRESS_SERVICE_URL = config("EXPRESS_SERVICE_URL")
 
-# Anymail
-# ------------------------------------------------------------------------------
-ANYMAIL = {
-    "MAILGUN_API_KEY": config("MAILGUN_API_KEY"),
-    "MAILGUN_SENDER_DOMAIN": config("MAILGUN_SENDER_DOMAIN"),
-    "MAILGUN_API_URL": "https://api.eu.mailgun.net/v3",
-}
-EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
-SERVER_EMAIL = config("SERVER_EMAIL")
+# -------------------------------------------------------------------
+# Security
+# -------------------------------------------------------------------
+SESSION_COOKIE_HTTPONLY = False
+CSRF_COOKIE_HTTPONLY = False
+X_FRAME_OPTIONS = "DENY"
 
-# Express
-# ------------------------------------------------------------------------------
-EXPRESS_SERVICE_URL = config("EXPRESS_SERVICE_URL")
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
+    SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=True, cast=bool)
+    CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=True, cast=bool)
+    SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=31536000, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True, cast=bool)
+    SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=True, cast=bool)
+    SECURE_CONTENT_TYPE_NOSNIFF = config("SECURE_CONTENT_TYPE_NOSNIFF", default=True, cast=bool)
 
-# DRF Spectacular
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Spectacular API Docs
+# -------------------------------------------------------------------
 SPECTACULAR_SETTINGS = {
     "TITLE": "FinMark API",
     "DESCRIPTION": "API documentation for FinMark by Imperionite",
@@ -428,35 +346,3 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-# Security
-# ------------------------------------------------------------------------------
-SESSION_COOKIE_HTTPONLY = False
-
-X_FRAME_OPTIONS = "DENY"
-
-CSRF_COOKIE_HTTPONLY = False
-
-CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", cast=Csv())
-
-if not settings.DEBUG:
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-    SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
-
-    SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=True, cast=bool)
-
-    CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=True, cast=bool)
-
-    SECURE_HSTS_SECONDS = config(
-        "SECURE_HSTS_SECONDS", default=18408206, cast=int
-    )  # 60
-
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = config(
-        "SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True, cast=bool
-    )
-
-    SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=True, cast=bool)
-
-    SECURE_CONTENT_TYPE_NOSNIFF = config(
-        "SECURE_CONTENT_TYPE_NOSNIFF", default=True, cast=bool
-    )
