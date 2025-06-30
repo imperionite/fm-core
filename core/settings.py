@@ -133,38 +133,13 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Database & Cache
 # ------------------------------------------------------------------------------
 
-db_from_env = config("DATABASE_URL")
-
-DATABASES = {
-    "default": dj_database_url.config(
-        default=db_from_env,
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
-
-# Caching
-REDIS_URL = config("REDIS_URL")
-
-# Default Redis cache for dev/prod
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": REDIS_URL,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "IGNORE_EXCEPTIONS": True,
-            "PASSWORD": config("REDIS_PASSWORD"),
-        },
-    },
-}
-
-# Override settings for unit tests
 if "test" in sys.argv:
-    # Use in-memory SQLite DB for speed
-    DATABASES["default"] = {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
+    # Use in-memory SQLite DB for tests
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
     }
 
     # Use fakeredis in-memory cache for tests
@@ -175,6 +150,31 @@ if "test" in sys.argv:
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
                 "IGNORE_EXCEPTIONS": True,
+            },
+        }
+    }
+
+else:
+    db_from_env = config("DATABASE_URL")
+    redis_url = config("REDIS_URL")
+    redis_password = config("REDIS_PASSWORD")
+
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=db_from_env,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": redis_url,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "IGNORE_EXCEPTIONS": True,
+                "PASSWORD": redis_password,
             },
         }
     }
