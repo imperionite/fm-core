@@ -10,12 +10,19 @@ from django.db import transaction
 import requests
 
 from .models import Cart, CartItem, Order, OrderItem, Payment
-from .serializers import CartSerializer, CartItemSerializer, OrderSerializer, OrderStatusUpdateSerializer, PaymentSerializer
+from .serializers import (
+    CartSerializer,
+    CartItemSerializer,
+    OrderSerializer,
+    OrderStatusUpdateSerializer,
+    PaymentSerializer,
+)
 from utils.cache_keys import cart_key, orders_list_key, order_detail_key, service_key
 
 from orders.utils.email import trigger_order_confirmation_email
 
 EXPRESS_SERVICE_URL = settings.EXPRESS_SERVICE_URL
+
 
 def fetch_service(service_id):
     key = service_key(service_id)
@@ -51,10 +58,14 @@ class CartView(APIView):
         service_id = request.data.get("service_id")
 
         if not service_id:
-            return Response({"detail": "Missing service_id"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Missing service_id"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         if cart.items.filter(service_id=service_id).exists():
-            return Response({"detail": "Service already in cart."}, status=status.HTTP_409_CONFLICT)
+            return Response(
+                {"detail": "Service already in cart."}, status=status.HTTP_409_CONFLICT
+            )
 
         service = fetch_service(service_id)
         item = CartItem.objects.create(
@@ -81,11 +92,15 @@ class CartItemDeleteView(APIView):
     def delete(self, request, service_id):
         cart = Cart.objects.filter(user=request.user).first()
         if not cart:
-            return Response({"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Cart not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         item = cart.items.filter(service_id=service_id).first()
         if not item:
-            return Response({"detail": "Item not in cart."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Item not in cart."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         item.delete()
         cache.delete(cart_key(request.user.id))
@@ -101,8 +116,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_staff:
-            return Order.objects.all().order_by('-ordered_at')
-        return Order.objects.filter(user=user).order_by('-ordered_at')
+            return Order.objects.all().order_by("-ordered_at")
+        return Order.objects.filter(user=user).order_by("-ordered_at")
 
     def list(self, request, *args, **kwargs):
         key = orders_list_key(request.user.id)
@@ -137,37 +152,43 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         if request.user.is_staff:
-            if requested_status == "cancelled" and order.status in ["completed", "refunded"]:
+            if requested_status == "cancelled" and order.status in [
+                "completed",
+                "refunded",
+            ]:
                 return Response(
                     {"detail": f"Cannot cancel order in '{order.status}' status."},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             elif requested_status == "completed" and order.status != "paid":
                 return Response(
                     {"detail": "Can only mark paid orders as completed."},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
         elif order.user == request.user:
             if requested_status == "completed" and order.status != "paid":
                 return Response(
                     {"detail": "Only paid orders can be marked as completed."},
-                    status=status.HTTP_403_FORBIDDEN
+                    status=status.HTTP_403_FORBIDDEN,
                 )
-            elif requested_status == "cancelled" and order.status not in ["pending", "confirmed"]:
+            elif requested_status == "cancelled" and order.status not in [
+                "pending",
+                "confirmed",
+            ]:
                 return Response(
                     {"detail": f"Cannot cancel order in '{order.status}' status."},
-                    status=status.HTTP_403_FORBIDDEN
+                    status=status.HTTP_403_FORBIDDEN,
                 )
             elif requested_status not in ["completed", "cancelled"]:
                 return Response(
                     {"detail": f"Cannot change order to '{requested_status}'."},
-                    status=status.HTTP_403_FORBIDDEN
+                    status=status.HTTP_403_FORBIDDEN,
                 )
         else:
             return Response(
                 {"detail": "You do not have permission to update this order."},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         order.status = requested_status
@@ -180,7 +201,9 @@ class OrderViewSet(viewsets.ModelViewSet):
     def checkout(self, request):
         cart = Cart.objects.filter(user=request.user).first()
         if not cart or not cart.items.exists():
-            return Response({"detail": "Cart is empty."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Cart is empty."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         with transaction.atomic():
             order = Order.objects.create(user=request.user, status="confirmed")
@@ -208,10 +231,16 @@ class OrderViewSet(viewsets.ModelViewSet):
         order = self.get_object()
 
         if order.user != request.user and not request.user.is_staff:
-            return Response({"detail": "You do not own this order."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "You do not own this order."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if order.status != "confirmed":
-            return Response({"detail": "Only confirmed orders can be paid."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Only confirmed orders can be paid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = PaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

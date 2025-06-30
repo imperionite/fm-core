@@ -20,10 +20,11 @@ from .permissions import IsOwnerOrAdmin
 
 User = get_user_model()
 
+
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
-    callback_url = config('CALLBACK_URL')
+    callback_url = config("CALLBACK_URL")
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
@@ -32,19 +33,20 @@ class GoogleLogin(SocialLoginView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
-            return Response({
-                'access': access_token,
-                'refresh': refresh_token
-            }, status=status.HTTP_200_OK)
+            return Response(
+                {"access": access_token, "refresh": refresh_token},
+                status=status.HTTP_200_OK,
+            )
         else:
             return response
 
-# Just a soft-delete or deactivation through delete 
+
+# Just a soft-delete or deactivation through delete
 class UserDeactivateView(generics.DestroyAPIView):
     permission_classes = [IsOwnerOrAdmin, IsAuthenticated]
     authentication_classes = [JWTAuthentication, TokenAuthentication]
     serializer_class = CustomUserDetailsSerializer
-    lookup_field = 'username'
+    lookup_field = "username"
     queryset = User.objects.all()
 
     def perform_destroy(self, instance):
@@ -52,8 +54,10 @@ class UserDeactivateView(generics.DestroyAPIView):
         instance.is_active = False
         instance.save()
 
+
 class LoginThrottleView(LoginView):
     throttle_classes = [AnonRateThrottle]
 
+
 class GoogleLoginThrottleView(GoogleLogin):
-    throttle_classes = [AnonRateThrottle] 
+    throttle_classes = [AnonRateThrottle]

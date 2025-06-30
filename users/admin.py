@@ -6,11 +6,19 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 @admin.register(User)
 class UserAdmin(auth_admin.UserAdmin):
-
     fieldsets = auth_admin.UserAdmin.fieldsets
-    list_display = ['pk', 'username', 'email',
-                    'is_superuser', 'is_staff', 'is_active', 'date_joined']
-    search_fields = ['email',]
- 
+    list_display = [
+        "pk",
+        "username",
+        "email",
+        "is_superuser",
+        "is_staff",
+        "is_active",
+        "date_joined",
+    ]
+    search_fields = [
+        "email",
+    ]

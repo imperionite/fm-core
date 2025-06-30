@@ -2,8 +2,6 @@ from rest_framework import permissions
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
-
-
     def has_permission(self, request, view):
         # Allow access only if user is authenticated
         return request.user and request.user.is_authenticated
@@ -16,18 +14,21 @@ class IsOwnerOrAdmin(permissions.BasePermission):
             return True
 
         return obj == request.user
-    
+
 
 class IsEmailVerified(permissions.BasePermission):
     """
     Allows access only to authenticated users with verified email.
     """
+
     message = "You must verify your email to perform this action."
 
     def has_permission(self, request, view):
         return bool(
-            request.user and
-            request.user.is_authenticated and
-            getattr(request.user, "emailaddress_set", None) and
-            request.user.emailaddress_set.filter(primary=True, verified=True).exists()
+            request.user
+            and request.user.is_authenticated
+            and getattr(request.user, "emailaddress_set", None)
+            and request.user.emailaddress_set.filter(
+                primary=True, verified=True
+            ).exists()
         )
