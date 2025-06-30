@@ -1,0 +1,78 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.11, pytest-8.4.1, pluggy-1.6.0
+django: version: 5.2.1, settings: core.settings (from ini)
+rootdir: /Users/arnel/CODES/MMDC/PT/fm-core
+configfile: pytest.ini
+plugins: django-4.11.1, cov-6.2.1, mock-3.14.1
+collected 9 items
+
+orders/tests/test_cart.py ..                                             [ 22%]
+orders/tests/test_checkout.py .                                          [ 33%]
+orders/tests/test_payment.py .                                           [ 44%]
+users/tests/test_permissions.py ...                                      [ 77%]
+users/tests/test_views.py ..                                             [100%]
+
+=============================== warnings summary ===============================
+orders/tests/test_cart.py::test_add_service_to_cart
+orders/tests/test_cart.py::test_get_cart_contents
+orders/tests/test_checkout.py::test_checkout_creates_order
+orders/tests/test_payment.py::test_order_payment_flow
+users/tests/test_views.py::test_user_deactivate_by_self
+users/tests/test_views.py::test_user_deactivate_by_admin
+  /Users/arnel/CODES/MMDC/PT/fm-core/venv/lib/python3.11/site-packages/django/core/handlers/base.py:61: UserWarning: No directory at: /Users/arnel/CODES/MMDC/PT/fm-core/staticfiles/
+    mw_instance = middleware(adapted_handler)
+
+orders/tests/test_cart.py::test_add_service_to_cart
+  /Users/arnel/CODES/MMDC/PT/fm-core/venv/lib/python3.11/site-packages/dj_rest_auth/registration/serializers.py:228: UserWarning: app_settings.USERNAME_REQUIRED is deprecated, use: app_settings.SIGNUP_FIELDS['username']['required']
+    required=allauth_account_settings.USERNAME_REQUIRED,
+
+orders/tests/test_cart.py::test_add_service_to_cart
+  /Users/arnel/CODES/MMDC/PT/fm-core/venv/lib/python3.11/site-packages/dj_rest_auth/registration/serializers.py:230: UserWarning: app_settings.EMAIL_REQUIRED is deprecated, use: app_settings.SIGNUP_FIELDS['email']['required']
+    email = serializers.EmailField(required=allauth_account_settings.EMAIL_REQUIRED)
+
+orders/tests/test_cart.py::test_add_service_to_cart
+  /Users/arnel/CODES/MMDC/PT/fm-core/venv/lib/python3.11/site-packages/dj_rest_auth/registration/serializers.py:288: UserWarning: app_settings.EMAIL_REQUIRED is deprecated, use: app_settings.SIGNUP_FIELDS['email']['required']
+    email = serializers.EmailField(required=allauth_account_settings.EMAIL_REQUIRED)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.11.11-final-0 _______________
+
+Name                                                                            Stmts   Miss  Cover   Missing
+-------------------------------------------------------------------------------------------------------------
+conftest.py                                                                        20      0   100%
+core/__init__.py                                                                    0      0   100%
+core/settings.py                                                                   95     16    83%   21-23, 132-139, 272-274, 351-360
+core/urls.py                                                                        5      0   100%
+orders/__init__.py                                                                  0      0   100%
+orders/admin.py                                                                    23      0   100%
+orders/apps.py                                                                      6      0   100%
+orders/migrations/0001_initial.py                                                   7      0   100%
+orders/migrations/0002_remove_order_price_remove_order_service_id_and_more.py       5      0   100%
+orders/migrations/0003_alter_order_status_payment.py                                5      0   100%
+orders/migrations/__init__.py                                                       0      0   100%
+orders/models.py                                                                   36      4    89%   12, 23, 45, 73
+orders/serializers.py                                                              29      0   100%
+orders/tests/test_cart.py                                                          13      0   100%
+orders/tests/test_checkout.py                                                      11      0   100%
+orders/tests/test_payment.py                                                       15      0   100%
+orders/urls.py                                                                     10      1    90%   7
+orders/utils/email.py                                                              12      6    50%   8-20, 35-38
+orders/views.py                                                                   154     75    51%   28-39, 51-54, 61, 66, 81-86, 93-107, 119, 123-131, 134-143, 147-198, 204, 234, 240
+users/__init__.py                                                                   0      0   100%
+users/admin.py                                                                      9      0   100%
+users/apps.py                                                                       6      0   100%
+users/migrations/0001_initial.py                                                    9      0   100%
+users/migrations/__init__.py                                                        0      0   100%
+users/models.py                                                                    14      1    93%   29
+users/permissions.py                                                               14      2    86%   11, 27
+users/serializers.py                                                                9      1    89%   11
+users/tests/test_permissions.py                                                    28      0   100%
+users/tests/test_views.py                                                          16      0   100%
+users/urls.py                                                                       5      0   100%
+users/views.py                                                                     42      8    81%   30-41
+utils/__init__.py                                                                   0      0   100%
+utils/cache_keys.py                                                                 8      1    88%   14
+-------------------------------------------------------------------------------------------------------------
+TOTAL                                                                             606    115    81%
+======================== 9 passed, 9 warnings in 2.64s =========================

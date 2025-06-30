@@ -1,33 +1,50 @@
-name: CI - Test Django App
+name: Django CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   test:
-    name: Run Unit Tests
     runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: dummykey
+      DEBUG: true
+      DATABASE_URL: sqlite://:memory:
+      REDIS_URL: fakeredis://
+      REDIS_PASSWORD: ""
+      GOOGLE_CLIENT_ID: dummy
+      GOOGLE_CLIENT_SECRET: dummy
+      CSRF_TRUSTED_ORIGINS: http://localhost
+      CORS_ALLOWED_ORIGINS: http://localhost
+      CORS_ORIGIN_WHITELIST: http://localhost
+      LOGIN_URL: /login/
+      CALLBACK_URL: http://localhost/callback/
+      ACTIVATION_URL: auth/users/activate/{uid}/{token}
+      SOCIAL_AUTH_ALLOWED_REDIRECT_URIS: http://localhost/callback/
+      DEFAULT_FROM_EMAIL: no-reply@localhost
+      SERVER_EMAIL: server@localhost
+      MAILGUN_API_KEY: dummy
+      MAILGUN_SENDER_DOMAIN: localhost
+      EXPRESS_SERVICE_URL: http://localhost
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run migrations and seed data
-        run: |
-          python manage.py migrate --no-input
-
-      - name: Run unit tests with coverage
+      - name: Run tests with coverage
         run: |
           pytest --cov --tb=short
