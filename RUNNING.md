@@ -104,7 +104,7 @@ ping
 celery -A core worker --loglevel=info
 
 # Pytest
+export CI_TESTING="True" # export only on initial run
 pytest --cov --tb=short
 pytest --cov --tb=short --cov-report=term-missing > test_log.txt 2>&1 # print to test_log.txt
-pytest --cov
 ```
