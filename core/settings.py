@@ -13,16 +13,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Use an explicit environment variable for CI testing to ensure reliability
 IS_TESTING = os.environ.get('CI_TESTING', 'False') == 'True'
 
-# Only access environment variables if not running tests
-if not IS_TESTING:
-    SECRET_KEY = config("SECRET_KEY", default="secretkey")
-    DEBUG = config("DEBUG", default=False, cast=bool)
-    ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
-else:
+# Define common variables that might be accessed early, with defaults for non-testing
+# These will be overridden in the IS_TESTING block if needed for testing.
+SECRET_KEY = config("SECRET_KEY", default="secretkey")
+DEBUG = config("DEBUG", default=False, cast=bool)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+# Define CALLBACK_URL here with a robust default, so it's always available.
+# This prevents decouple.UndefinedValueError if it's accessed before the IS_TESTING block's override.
+CALLBACK_URL = config("CALLBACK_URL", default="http://localhost:5173")
+
+
+if IS_TESTING:
     # For testing, provide dummy values for all potentially missing env vars
     SECRET_KEY = "test-secret-key"
     DEBUG = True
     ALLOWED_HOSTS = ["localhost"]
+    # Override CALLBACK_URL for testing specifically
+    CALLBACK_URL = "http://localhost:5173" # Ensure this is used for tests
     # Add dummy values for other variables that might be accessed unconditionally
     # or within structures that are always defined, even if their usage is conditional.
     # This prevents decouple.UndefinedValueError during settings file loading.
@@ -38,7 +45,6 @@ else:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
     SOCIAL_AUTH_ALLOWED_REDIRECT_URIS = ["http://localhost:5173/login"]
     ACTIVATION_URL = "auth/users/activate/{uid}/{token}" # Dummy URL for testing
-    CALLBACK_URL = "http://localhost:5173"
 
 
 # -------------------------------------------------------------------
@@ -294,7 +300,7 @@ SIMPLE_JWT = {
 if not IS_TESTING:
     ADMIN_URL = config("ADMIN_URL", default="admin/")
     LOGIN_URL = config("LOGIN_URL", default="/auth/login/")
-    CALLBACK_URL = config("CALLBACK_URL", default="/auth/callback/")
+    # REMOVED: CALLBACK_URL = config("CALLBACK_URL", default="/auth/callback/") # This line is removed
 else:
     # These are already set in the main IS_TESTING block at the top
     ADMIN_URL = "admin/"
