@@ -32,6 +32,7 @@ python manage.py createsuperuser
 python manage.py create_superuser
 
 # serve backend at localhost:8000
+unset CI_TESTING # only if the pytest has run and initially in test mode
 python manage.py runserver
 
 # generating requirements file

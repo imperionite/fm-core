@@ -2,6 +2,10 @@
 # Exit on error
 set -o errexit
 
+# IMPORTANT: Ensure CI_TESTING is NOT set for development builds.
+# This forces Django to use the 'else' block in settings.py for PostgreSQL.
+unset CI_TESTING
+
 # Run makemigrations dry-run to detect errors or issues
 echo "Checking for migration issues (dry run)..."
 if ! python manage.py makemigrations --dry-run --verbosity 3 --check; then

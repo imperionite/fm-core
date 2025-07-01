@@ -2,6 +2,10 @@
 # Exit on error
 set -o errexit
 
+# IMPORTANT: Ensure CI_TESTING is NOT set.
+# This forces Django to use the 'else' block in settings.py for production configurations.
+unset CI_TESTING
+
 # Install dependencies from requirements.txt
 pip install -r requirements.txt
 
