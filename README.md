@@ -103,7 +103,7 @@ If deployed as a microservice in a distributed system:
 17. [Deployment & Operations](#deployment--operations)
 18. [Operational Considerations](#operational-considerations)
 19. [Unit Test Coverage](#unit-test-coverage)
-20. [CI/CD Pipeline](#ci/cd-pipeline)
+20. [CI/CD Pipeline](#cicd-pipeline)
 21. [Appendix: Mermaid Diagrams](#appendix-additional-diagrams)
 
 ---
@@ -578,20 +578,6 @@ Uses curl to send a POST request to https://api.render.com/deploy/$RENDER_SERVIC
 Includes the Authorization header with the RENDER_API_KEY for authentication.
 
 The clearCache=true parameter is used to force a fresh build on Render.
-
-### Benefits
-
-Full Automation: Automates both the testing and deployment processes, reducing manual effort and potential human error.
-
-Continuous Integration: Ensures that every code change is automatically validated against the test suite, providing fast feedback.
-
-Continuous Deployment: Guarantees that only code that has passed all tests is automatically deployed to the production environment.
-
-Isolated Testing: Runs tests in a clean, isolated environment without dependencies on external services (PostgreSQL, Redis), making them reliable and fast.
-
-Improved Code Health: Encourages writing testable code and helps maintain a high level of code quality over time.
-
-Faster Delivery: Streamlines the path from code commit to live application, enabling quicker delivery of features and bug fixes.
 
 ---
 
