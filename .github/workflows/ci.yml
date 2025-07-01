@@ -40,4 +40,4 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run unit tests
-        run: export CI_TESTING="True" && pytest --cov --tb=short
+        run: pytest --cov --tb=short
