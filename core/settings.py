@@ -1,5 +1,5 @@
+# core/settings.py
 import os
-import sys
 from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
@@ -10,7 +10,8 @@ from corsheaders.defaults import default_headers
 # Path & Basic Config
 # -------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
-IS_TESTING = "test" in sys.argv
+# Use an explicit environment variable for CI testing to ensure reliability
+IS_TESTING = os.environ.get("CI_TESTING", "False") == "True"
 
 # Only access environment variables if not running tests
 if not IS_TESTING:
@@ -18,9 +19,23 @@ if not IS_TESTING:
     DEBUG = config("DEBUG", default=False, cast=bool)
     ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 else:
+    # For testing, provide dummy values for all potentially missing env vars
     SECRET_KEY = "test-secret-key"
     DEBUG = True
     ALLOWED_HOSTS = ["localhost"]
+    GOOGLE_CLIENT_ID = "dummy-google-client-id-for-test"
+    GOOGLE_CLIENT_SECRET = "dummy-google-client-secret-for-test"
+    MAILGUN_API_KEY = "dummy-mailgun-api-key-for-test"
+    MAILGUN_SENDER_DOMAIN = "dummy.mailgun.org"
+    DEFAULT_FROM_EMAIL = "noreply@test.com"
+    SERVER_EMAIL = "issues@test.com"
+    EXPRESS_SERVICE_URL = "http://localhost:3000/api/services"  # Dummy URL
+    CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+    CORS_ORIGIN_WHITELIST = ["http://localhost:5173"]
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
+    SOCIAL_AUTH_ALLOWED_REDIRECT_URIS = ["http://localhost:5173/login"]
+    ACTIVATION_URL = "auth/users/activate/{uid}/{token}"  # Dummy URL for testing
+
 
 # -------------------------------------------------------------------
 # Applications & Middleware
@@ -161,11 +176,11 @@ else:
             "BACKEND": "django_redis.cache.RedisCache",
             "LOCATION": config(
                 "REDIS_URL", default="redis://localhost:6379/1"
-            ),  
+            ),  # <-- fallback
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
                 "IGNORE_EXCEPTIONS": True,
-                "PASSWORD": config("REDIS_PASSWORD", default=""),
+                "PASSWORD": config("REDIS_PASSWORD", default=""),  # fallback: no auth
             },
         }
     }
@@ -218,10 +233,16 @@ CORS_ALLOW_HEADERS = default_headers + (
 )
 CORS_ALLOW_METHODS = ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"]
 
+# These settings are now handled by the IS_TESTING block above for test mode
+# and will use decouple.config for non-test environments.
 if not IS_TESTING:
     CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", cast=Csv(), default="")
     CORS_ORIGIN_WHITELIST = config("CORS_ORIGIN_WHITELIST", cast=Csv(), default="")
     CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", cast=Csv(), default="")
+else:
+    # These are already set in the main IS_TESTING block at the top
+    pass
+
 
 # -------------------------------------------------------------------
 # Django REST Framework & JWT
@@ -286,6 +307,7 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = CALLBACK_URL
 
+# This entire block needs to be conditional OR its internal config() calls need defaults
 if not IS_TESTING:
     SOCIALACCOUNT_PROVIDERS = {
         "google": {
@@ -298,6 +320,21 @@ if not IS_TESTING:
             },
         }
     }
+else:
+    # Provide a dummy SOCIALACCOUNT_PROVIDERS structure for testing
+    # The values for client_id and secret are already set in the top IS_TESTING block
+    SOCIALACCOUNT_PROVIDERS = {
+        "google": {
+            "SCOPE": ["email", "profile", "openid"],
+            "AUTH_PARAMS": {"access_type": "offline"},
+            "OAUTH_PKCE_ENABLED": True,
+            "APP": {
+                "client_id": GOOGLE_CLIENT_ID,  # Use the dummy value defined at the top
+                "secret": GOOGLE_CLIENT_SECRET,  # Use the dummy value defined at the top
+            },
+        }
+    }
+
 
 REST_AUTH = {
     "USE_JWT": True,
@@ -311,13 +348,21 @@ DJOSER = {
     "LOGIN_FIELD": "email",
     "USERNAME_RESET_CONFIRM_URL": "auth/username/reset/confirm/{uid}/{token}",
     "PASSWORD_RESET_CONFIRM_URL": "auth/password/reset/confirm/{uid}/{token}",
-    "ACTIVATION_URL": config(
-        "ACTIVATION_URL", default="auth/users/activate/{uid}/{token}"
+    # This line was causing an issue because it was always calling config()
+    # Now it uses the variable defined in the IS_TESTING block, or config() for non-testing.
+    "ACTIVATION_URL": (
+        ACTIVATION_URL
+        if IS_TESTING
+        else config("ACTIVATION_URL", default="auth/users/activate/{uid}/{token}")
     ),
     "HIDE_USERS": False,
     "SOCIAL_AUTH_TOKEN_STRATEGY": "djoser.social.token.jwt.TokenStrategy",
-    "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": config(
-        "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS", cast=Csv(), default=""
+    # This line was causing an issue because it was always calling config()
+    # Now it uses the variable defined in the IS_TESTING block, or config() for non-testing.
+    "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": (
+        SOCIAL_AUTH_ALLOWED_REDIRECT_URIS
+        if IS_TESTING
+        else config("SOCIAL_AUTH_ALLOWED_REDIRECT_URIS", cast=Csv(), default="")
     ),
     "SERIALIZERS": {
         "user": "djoser.serializers.UserSerializer",
@@ -339,6 +384,18 @@ if not IS_TESTING:
     DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
     SERVER_EMAIL = config("SERVER_EMAIL")
     EXPRESS_SERVICE_URL = config("EXPRESS_SERVICE_URL")
+else:
+    # Provide dummy values for ANYMAIL and email settings when testing
+    ANYMAIL = {
+        "MAILGUN_API_KEY": MAILGUN_API_KEY,  # Use dummy from top IS_TESTING block
+        "MAILGUN_SENDER_DOMAIN": MAILGUN_SENDER_DOMAIN,  # Use dummy from top IS_TESTING block
+        "MAILGUN_API_URL": "https://api.eu.mailgun.net/v3",
+    }
+    EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"  # Use in-memory email backend for tests
+    DEFAULT_FROM_EMAIL = DEFAULT_FROM_EMAIL  # Use dummy from top IS_TESTING block
+    SERVER_EMAIL = SERVER_EMAIL  # Use dummy from top IS_TESTING block
+    EXPRESS_SERVICE_URL = EXPRESS_SERVICE_URL  # Use dummy from top IS_TESTING block
+
 
 # -------------------------------------------------------------------
 # Security
@@ -347,7 +404,7 @@ SESSION_COOKIE_HTTPONLY = False
 CSRF_COOKIE_HTTPONLY = False
 X_FRAME_OPTIONS = "DENY"
 
-if not DEBUG:
+if not DEBUG:  # This condition relies on the DEBUG variable, which is set by IS_TESTING
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
     SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=True, cast=bool)

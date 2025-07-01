@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # Explicitly set CI_TESTING to "True" for this workflow run.
+      # Your core/settings.py will use this to activate test-specific configurations.
+      CI_TESTING: "True"
       DEBUG: "True"
       SECRET_KEY: "ci-dummy-secret-key"
       SIGNING_KEY: "ci-dummy-signing-key"
