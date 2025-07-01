@@ -33,6 +33,7 @@ python manage.py create_superuser
 
 # serve backend at localhost:8000
 unset CI_TESTING # only if the pytest has run and initially in test mode
+pip cache purge
 python manage.py runserver
 
 # generating requirements file
@@ -106,6 +107,6 @@ celery -A core worker --loglevel=info
 
 # Pytest
 export CI_TESTING="True" # export only on initial run
-pytest --cov --tb=short
+pip cache purge && pytest --cov --tb=short
 pytest --cov --tb=short --cov-report=term-missing > test_log.txt 2>&1 # print to test_log.txt
 ```

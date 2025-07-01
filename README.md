@@ -103,7 +103,8 @@ If deployed as a microservice in a distributed system:
 17. [Deployment & Operations](#deployment--operations)
 18. [Operational Considerations](#operational-considerations)
 19. [Unit Test Coverage](#unit-test-coverage)
-20. [Appendix: Mermaid Diagrams](#appendix-additional-diagrams)
+20. [CI/CD Pipeline](#ci/cd-pipeline)
+21. [Appendix: Mermaid Diagrams](#appendix-additional-diagrams)
 
 ---
 
@@ -509,6 +510,88 @@ Most warnings are:
 
 * **Static files directory missing** (harmless for test runs)
 * **Deprecation warnings** from `dj-rest-auth` related to signup field settings
+
+---
+
+## CI/CD Pipeline
+
+This document outlines the Continuous Integration (CI) and Continuous Deployment (CD) pipeline implemented for the Django/DRF application using GitHub Actions. The pipeline automates the process of testing code changes and deploying the application to Render upon successful validation.
+
+### Overview
+
+The pipeline is triggered by pushes to the main branch and by pull requests targeting main. It consists of two main jobs:
+
+Test Job: Sets up a Python environment, installs dependencies, and executes the unit test suite.
+
+Deploy Job: Runs only if the Test Job passes successfully and the push is to the main branch. It triggers a new deployment of the application on Render.
+
+### Key Components & Technologies
+
+GitHub Actions: The automation platform used to define and execute the CI/CD workflow.
+
+Python 3.11: The specified Python version for the build environment.
+
+pytest & pytest-django: The testing framework used to run unit tests and integrate with Django's test utilities.
+
+ubuntu-latest: The operating system environment where the jobs are executed.
+
+In-Memory SQLite Database (:memory:): For unit tests, Django's database configuration is dynamically switched to an in-memory SQLite database. This ensures tests are fast and don't require a running PostgreSQL instance in the CI environment.
+
+fakeredis (for Django): The caching backend is configured to use fakeredis in test mode, providing an in-memory Redis simulation without needing a real Redis server.
+
+Environment Variable (CI_TESTING): An explicit environment variable (CI_TESTING: "True") is set in the GitHub Actions workflow to reliably inform core/settings.py that it's running in a test environment, activating the in-memory configurations.
+
+Render Deployment API: Used by GitHub Actions to trigger deployments.
+
+RENDER_API_KEY (GitHub Secret): A personal API key from Render, stored securely as a GitHub secret, used for authentication with the Render API.
+
+RENDER_SERVICE_ID (GitHub Secret): The unique identifier (srv-xxxxxxxxxxxxxxxxxxxx) for the specific Render service, also stored as a GitHub secret.
+
+curl: A command-line tool used in the GitHub Actions workflow to make the HTTP POST request to Render's deployment API.
+
+### Workflow (.github/workflows/cicd.yml)
+
+The ci.yml file defines the complete CI/CD pipeline:
+
+test Job:
+
+Checkout code: Clones the repository.
+
+Set up Python: Configures the Python environment.
+
+Install dependencies: Installs project dependencies from requirements.txt using pip.
+
+Run unit tests: Executes pytest --cov --tb=short to run tests and generate a coverage report.
+
+deploy Job:
+
+Dependencies: This job needs: test, meaning it will only start if the test job completes successfully.
+
+Conditional Execution: It runs only if the test job was successful (if: success()) AND the push was to the main branch (github.ref == 'refs/heads/main').
+
+Checkout code: Clones the repository again (for the deploy job's context).
+
+Trigger Render Deployment:
+
+Uses curl to send a POST request to https://api.render.com/deploy/$RENDER_SERVICE_ID.
+
+Includes the Authorization header with the RENDER_API_KEY for authentication.
+
+The clearCache=true parameter is used to force a fresh build on Render.
+
+### Benefits
+
+Full Automation: Automates both the testing and deployment processes, reducing manual effort and potential human error.
+
+Continuous Integration: Ensures that every code change is automatically validated against the test suite, providing fast feedback.
+
+Continuous Deployment: Guarantees that only code that has passed all tests is automatically deployed to the production environment.
+
+Isolated Testing: Runs tests in a clean, isolated environment without dependencies on external services (PostgreSQL, Redis), making them reliable and fast.
+
+Improved Code Health: Encourages writing testable code and helps maintain a high level of code quality over time.
+
+Faster Delivery: Streamlines the path from code commit to live application, enabling quicker delivery of features and bug fixes.
 
 ---
 
