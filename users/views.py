@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import status, generics
 from rest_framework.response import Response
@@ -12,8 +13,6 @@ from dj_rest_auth.registration.views import SocialLoginView
 from dj_rest_auth.views import LoginView
 
 
-from decouple import config
-
 from .serializers import CustomUserDetailsSerializer
 from .permissions import IsOwnerOrAdmin
 
@@ -24,7 +23,7 @@ User = get_user_model()
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
-    callback_url = config("CALLBACK_URL")
+    callback_url = settings.CALLBACK_URL
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
