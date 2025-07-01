@@ -380,8 +380,8 @@ Payments can be triggered via user POST requests or admin actions. The backend v
 ## API Documentation
 
 * `/api/schema/` — OpenAPI JSON
-* `/api/docs/` — Swagger UI
-* `/api/redoc/` — ReDoc view
+* `/api/docs/` — [Swagger UI](https://fm-core.onrender.com/api/docs)
+* `/api/redoc/` — [ReDoc view](https://fm-core.onrender.com/api/redoc)
 
 ---
 
