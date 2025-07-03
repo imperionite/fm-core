@@ -1,0 +1,82 @@
+name: Django CI/CD
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+  pull_request:
+    branches:
+      - main # Trigger on pull requests targeting main
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    env:
+      CI_TESTING: "True"
+      DEBUG: "True"
+      SECRET_KEY: "ci-dummy-secret-key"
+      SIGNING_KEY: "ci-dummy-signing-key"
+      SU_USERNAME: "su-username"
+      SU_EMAIL: "user100@grr.la"
+      SU_PASSWORD: "fake-password"
+      STAFF_USERNAME: "staff-username"
+      STAFF_EMAIL: "user101@grr.la"
+      TEST_USER_EMAIL: "user102@grr.la"
+      DJANGO_SETTINGS_MODULE: "core.settings"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: pytest --cov --tb=short
+
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    # This 'needs' keyword ensures that the 'deploy' job will ONLY run
+    # if the 'test' job completes successfully.
+    needs: test
+    # This 'if' condition ensures deployment only happens on successful tests AND
+    # only for pushes to the 'main' branch (not for pull requests or other branches).
+    if: success() && github.ref == 'refs/heads/main'
+
+    env:
+      # IMPORTANT: Access the Render Deploy Hook URL from GitHub Secrets
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Trigger Render Deployment
+        run: |
+          echo "Triggering Render deployment via deploy hook."
+          # Install curl if not already available (usually is on ubuntu-latest)
+          sudo apt-get update && sudo apt-get install -y curl
+
+          # Send a POST request to Render's deploy hook URL.
+          # The deploy hook URL itself authenticates the request, so no Authorization header is needed.
+          # The 'clearCache=true' parameter is not applicable for deploy hooks,
+          # as they typically trigger a standard build.
+          curl -X POST \
+            "${{ env.RENDER_DEPLOY_HOOK_URL }}" \
+            --fail \
+            --show-error \
+            --silent \
+            --output /dev/null # Suppress curl output to keep logs clean
+
+          echo "Render deployment triggered successfully!"
+          echo "Check Render dashboard for deployment status."
