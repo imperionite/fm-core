@@ -21,6 +21,7 @@ django-admin startproject core .
 python manage.py startapp app_name
 
 # create and apply migration
+python manage.py check # check for any issues
 $ python manage.py makemigrations --dry-run --verbosity 3 # dry-run
 $ python manage.py makemigrations
 python manage.py migrate --fake-initial # mark initial migrations as applied without trying to recreate tables.
@@ -53,6 +54,12 @@ python manage.py assign_roles
 # remove all records from the entire database (including resetting auto-incrementing primary keys)
 python manage.py flush
 
+# For clean slate
+# Delete all existing migrations (leave __init__.py in the migrations/ folders):
+find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+find . -path "*/migrations/*.pyc" -delete
+find . -name "__pycache__" -exec rm -rf {} +
+
 # Render start command
 gunicorn --workers 3 --bind 0.0.0.0:$PORT core.wsgi:application # the core folder is in the root repo
 
@@ -69,7 +76,7 @@ site.domain = 'localhost:8000'
 site.name = 'Local Dev'
 
 # Site settings (Prod)
-site.domain = 'yourapp.onrender.com' # (No http/https, no trailing slashes)
+site.domain = 'yourapp.onrender.com' # or the frontend URL (No http/https, no trailing slashes)
 site.name = 'App Name'
 
 # K6
