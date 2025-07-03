@@ -38,41 +38,40 @@ orders/tests/test_cart.py::test_add_service_to_cart
 ================================ tests coverage ================================
 ______________ coverage: platform darwin, python 3.11.11-final-0 _______________
 
-Name                                                                            Stmts   Miss  Cover   Missing
--------------------------------------------------------------------------------------------------------------
-conftest.py                                                                        20      0   100%
-core/__init__.py                                                                    0      0   100%
-core/settings.py                                                                  113     25    78%   18-20, 172-180, 245-247, 295-297, 321, 387-395, 417-426
-core/urls.py                                                                        5      0   100%
-orders/__init__.py                                                                  0      0   100%
-orders/admin.py                                                                    23      0   100%
-orders/apps.py                                                                      6      0   100%
-orders/migrations/0001_initial.py                                                   7      0   100%
-orders/migrations/0002_remove_order_price_remove_order_service_id_and_more.py       5      0   100%
-orders/migrations/0003_alter_order_status_payment.py                                5      0   100%
-orders/migrations/__init__.py                                                       0      0   100%
-orders/models.py                                                                   36      4    89%   12, 23, 45, 73
-orders/serializers.py                                                              29      0   100%
-orders/tests/test_cart.py                                                          13      0   100%
-orders/tests/test_checkout.py                                                      11      0   100%
-orders/tests/test_payment.py                                                       15      0   100%
-orders/urls.py                                                                     10      1    90%   7
-orders/utils/email.py                                                              12      6    50%   8-20, 35-38
-orders/views.py                                                                   154     72    53%   28-39, 49, 61, 66, 81-86, 93-107, 119, 123-131, 134-143, 147-198, 204, 234, 240
-users/__init__.py                                                                   0      0   100%
-users/admin.py                                                                      9      0   100%
-users/apps.py                                                                       6      0   100%
-users/migrations/0001_initial.py                                                    9      0   100%
-users/migrations/__init__.py                                                        0      0   100%
-users/models.py                                                                    14      1    93%   29
-users/permissions.py                                                               14      2    86%   11, 27
-users/serializers.py                                                                9      1    89%   11
-users/tests/test_permissions.py                                                    28      0   100%
-users/tests/test_views.py                                                          16      0   100%
-users/urls.py                                                                       5      0   100%
-users/views.py                                                                     42      8    81%   30-41
-utils/__init__.py                                                                   0      0   100%
-utils/cache_keys.py                                                                 8      1    88%   14
--------------------------------------------------------------------------------------------------------------
-TOTAL                                                                             624    121    81%
-======================== 9 passed, 9 warnings in 1.57s =========================
+Name                                Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------
+conftest.py                            20      0   100%
+core/__init__.py                        0      0   100%
+core/settings.py                      113     21    81%   178-186, 251-253, 301-302, 327, 393-401, 423-432
+core/urls.py                            5      0   100%
+orders/__init__.py                      0      0   100%
+orders/admin.py                        23      0   100%
+orders/apps.py                          6      0   100%
+orders/migrations/0001_initial.py       5      0   100%
+orders/migrations/0002_initial.py       7      0   100%
+orders/migrations/__init__.py           0      0   100%
+orders/models.py                       36      3    92%   12, 23, 83
+orders/serializers.py                  29      0   100%
+orders/tests/test_cart.py              13      0   100%
+orders/tests/test_checkout.py          11      0   100%
+orders/tests/test_payment.py           15      0   100%
+orders/urls.py                         10      1    90%   7
+orders/utils/email.py                  12      6    50%   8-20, 35-38
+orders/views.py                       154     72    53%   28-39, 49, 61, 66, 81-86, 93-107, 119, 123-131, 134-143, 147-198, 204, 234, 240
+users/__init__.py                       0      0   100%
+users/admin.py                          9      0   100%
+users/apps.py                           6      0   100%
+users/migrations/0001_initial.py        9      0   100%
+users/migrations/__init__.py            0      0   100%
+users/models.py                        14      1    93%   29
+users/permissions.py                   14      2    86%   11, 27
+users/serializers.py                    9      1    89%   11
+users/tests/test_permissions.py        28      0   100%
+users/tests/test_views.py              16      0   100%
+users/urls.py                           5      0   100%
+users/views.py                         42      8    81%   29-40
+utils/__init__.py                       0      0   100%
+utils/cache_keys.py                     8      1    88%   14
+-----------------------------------------------------------------
+TOTAL                                 619    116    81%
+======================== 9 passed, 9 warnings in 1.78s =========================
