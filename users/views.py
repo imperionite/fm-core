@@ -11,6 +11,8 @@ from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
 from dj_rest_auth.views import LoginView
+from allauth.account.views import ConfirmEmailView
+from django.shortcuts import render
 
 
 from .serializers import CustomUserDetailsSerializer
@@ -52,6 +54,16 @@ class UserDeactivateView(generics.DestroyAPIView):
         # Instead of deleting, deactivate
         instance.is_active = False
         instance.save()
+
+
+class DelayedRedirectConfirmEmailView(ConfirmEmailView):
+    def get(self, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object:
+            self.object.confirm(self.request)
+            return render(self.request, "account/email_confirm.html")
+        else:
+            return render(self.request, "account/email_confirm_failed.html")
 
 
 class LoginThrottleView(LoginView):

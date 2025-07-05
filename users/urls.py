@@ -1,8 +1,11 @@
 from django.urls import path, include
-from allauth.account.views import ConfirmEmailView
-from dj_rest_auth.registration.views import VerifyEmailView
+# from dj_rest_auth.registration.views import VerifyEmailView
 
-from .views import UserDeactivateView, LoginThrottleView
+from .views import (
+    UserDeactivateView,
+    LoginThrottleView,
+    DelayedRedirectConfirmEmailView,
+)
 
 urlpatterns = [
     # dj-rest-auth
@@ -13,15 +16,16 @@ urlpatterns = [
     # hendles email confirmation
     path(
         "auth/registration/account-confirm-email/<str:key>/",
-        ConfirmEmailView.as_view(),
+        DelayedRedirectConfirmEmailView.as_view(),
         name="account_confirm_email",
     ),
     path("auth/registration/", include("dj_rest_auth.registration.urls")),
-    path(
-        "auth/account-confirm-email/",
-        VerifyEmailView.as_view(),
-        name="account_confirm_email",
-    ),
+    
+    # path(
+    #     "auth/account-confirm-email/",
+    #     VerifyEmailView.as_view(),
+    #     name="account_confirm_email",
+    # ),
     # djoser
     path("djoser-auth/", include("djoser.urls")),
     path("djoser-auth/", include("djoser.urls.authtoken")),
