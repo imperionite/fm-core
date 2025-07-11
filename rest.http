@@ -1,5 +1,5 @@
 ### VARS
-@access=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ5MjkxMTY0LCJpYXQiOjE3NDkyODc1NjQsImp0aSI6ImIyNThiNThjMDM1NzQxOWNiOTA4MDg4NzEwOGQwMWQyIiwidXNlcl9pZCI6N30.ijoeumZzEarJI1KeFw5_5aoKFBj-tr_jwxGCZcdJ9aFjhP64BF_5oA6Af4TQYTD1eqZZP_ZPkBp7wSmxduw7qg
+@access=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUxNzkxNzg3LCJpYXQiOjE3NTE3ODgxODcsImp0aSI6IjgzMGRiZTBjN2JmYTQ2NzI4ZWY1ZTczNzVjZDgxOGE0IiwidXNlcl9pZCI6MTJ9.rqNj98xhfzNvzWmJpHrLDjlN1hGfaM454yHwe7DgInOzWRVn5XIxQOe4aX1m7aub3hCEYLdrtvmajDSfw6iBBw
 @refresh=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0ODE2MDU0NSwiaWF0IjoxNzQ4MDc0MTQ1LCJqdGkiOiJiNjE4NTRlZGRiMGE0Y2VlYWNhM2EwOGQ1YmU2N2MwMSIsInVzZXJfaWQiOjEzfQ.pUry6PK37v88oQMaTqGagtS9t5Oa9oinkEzydRsAz2v2ErA5etZk4zO0zlus8mkPkUFO35nloSyueVdQjUdZpg
 @username=user1
 ### Register new user dj-rest-auth
@@ -32,8 +32,18 @@ POST http://localhost:8000/api/users/djoser-auth/jwt/create/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "username": "user7",
-    "password": "passworD!123"
+    "username": "admin",
+    "password": "A!123zzz"
+    
+}
+
+### Login - can login with username or email Djoser WARNING
+POST https://fm-core.onrender.com/api/users/djoser-auth/jwt/create/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "admin",
+    "password": "A!123zzz"
     
 }
 
@@ -42,7 +52,7 @@ POST http://localhost:8000/api/users/auth/login/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "user5@grr.la",
+    "email": "user10@grr.la",
     "password": "passworD!123"
     
 }
@@ -52,7 +62,7 @@ POST https://fm-core.onrender.com/api/users/auth/login/ HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "user10@grr.la",
+    "email": "user1@grr.la",
     "password": "passworD!123"
     
 }

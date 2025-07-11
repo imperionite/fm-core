@@ -278,6 +278,9 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "1000/min",
         "user": "10000/day",
+        # For load test only
+        # "anon": "1000000000/min",  
+        # "user": "1000000000/day",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }

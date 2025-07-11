@@ -116,4 +116,18 @@ celery -A core worker --loglevel=info
 export CI_TESTING="True" # export only on initial run
 pip cache purge && pytest --cov --tb=short
 pytest --cov --tb=short --cov-report=term-missing > test_log.txt 2>&1 # print to test_log.txt
+
+## ZAP
+docker exec zap sh -c "\
+zap-cli openapi https://fm-core.onrender.com/api/schema/ --auth-header 'Authorization: Bearer <your_admin_bearer_token>' && \
+zap-cli active-scan --scanners all && \
+zap-cli report -o /zap/reports/zap_report.json -f json"
+
 ```
+
+docker exec -it pt-zap-1 sh -c "\
+python3 zap-baseline.py \
+  -t http://localhost:8000 \
+  -f openapi \
+  -z '-config api.auth.bearer_token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUxODAxNjg5LCJpYXQiOjE3NTE3OTgwODksImp0aSI6ImQ4NGZjZDFhZTE4NTQxNzQ5OTFmNDA3ZjY4MDgyZjkwIiwidXNlcl9pZCI6MX0.smcBcovGuglpRrkGzSkEkHuS42iiQCt8HBvgnpkBImdnZD2srclhMAdPj9vniARCIzuG-tzdfVf-61SjNMCZqA' \
+  -r /zap/wrk/zap_report.html"

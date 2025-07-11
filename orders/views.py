@@ -271,6 +271,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         }
 
         # Trigger email confirmation via Thread + Mailgun API direct call
+        # Comment out for load testing
         trigger_order_confirmation_email(order.user.email, order_data)
 
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
