@@ -124,10 +124,3 @@ zap-cli active-scan --scanners all && \
 zap-cli report -o /zap/reports/zap_report.json -f json"
 
 ```
-
-docker exec -it pt-zap-1 sh -c "\
-python3 zap-baseline.py \
-  -t http://localhost:8000 \
-  -f openapi \
-  -z '-config api.auth.bearer_token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUxODAxNjg5LCJpYXQiOjE3NTE3OTgwODksImp0aSI6ImQ4NGZjZDFhZTE4NTQxNzQ5OTFmNDA3ZjY4MDgyZjkwIiwidXNlcl9pZCI6MX0.smcBcovGuglpRrkGzSkEkHuS42iiQCt8HBvgnpkBImdnZD2srclhMAdPj9vniARCIzuG-tzdfVf-61SjNMCZqA' \
-  -r /zap/wrk/zap_report.html"

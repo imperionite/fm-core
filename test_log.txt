@@ -42,7 +42,7 @@ Name                                Stmts   Miss  Cover   Missing
 -----------------------------------------------------------------
 conftest.py                            20      0   100%
 core/__init__.py                        0      0   100%
-core/settings.py                      113     21    81%   178-186, 251-253, 301-302, 327, 393-401, 423-432
+core/settings.py                      113     21    81%   178-186, 249-251, 302-303, 328, 394-402, 424-433
 core/urls.py                            5      0   100%
 orders/__init__.py                      0      0   100%
 orders/admin.py                        23      0   100%
@@ -68,10 +68,10 @@ users/permissions.py                   14      2    86%   11, 27
 users/serializers.py                    9      1    89%   11
 users/tests/test_permissions.py        28      0   100%
 users/tests/test_views.py              16      0   100%
-users/urls.py                           5      0   100%
-users/views.py                         42      8    81%   29-40
+users/urls.py                           3      0   100%
+users/views.py                         51     13    75%   31-42, 61-66
 utils/__init__.py                       0      0   100%
 utils/cache_keys.py                     8      1    88%   14
 -----------------------------------------------------------------
-TOTAL                                 619    116    81%
-======================== 9 passed, 9 warnings in 1.78s =========================
+TOTAL                                 626    121    81%
+======================== 9 passed, 9 warnings in 2.06s =========================
